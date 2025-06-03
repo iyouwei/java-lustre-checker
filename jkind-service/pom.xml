@@ -22,7 +22,7 @@
             <artifactId>smtinterpol</artifactId>
             <version>${project.version}</version>
             <scope>system</scope>
-            <systemPath>/Users/wei/IdeaProjects/jkind/lib/smtinterpol.jar</systemPath>
+            <systemPath>/Users/wei/IdeaProjects/java-lustre-checker/lib/smtinterpol.jar</systemPath>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>de.uni-freiburg.informatik.ultimate</groupId>-->
