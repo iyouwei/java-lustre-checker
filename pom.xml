@@ -6,7 +6,7 @@
     <groupId>com.ecnu.aiyowei</groupId>
     <artifactId>java-lustre-checker</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>jkind</name>
+    <name>java-lustre-checker</name>
     <url>http://maven.apache.org</url>
     <description>ECNU jkind</description>
 
