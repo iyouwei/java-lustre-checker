@@ -1,31 +1,33 @@
 package com.ecnu.synlong.common;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 @Data
-public class CheckResult<T> {
+public class CheckResult {
+	/**
+	 * 是否验证成功
+	 */
+	@JsonIgnore
 	private CheckStatus status;
-	private T data;
-	private String message;
 
-	public CheckResult(CheckStatus status, T data, String message) {
+	/**
+	 * 验证结果的具体信息
+	 */
+	private String result;
+
+
+	private CheckResult(CheckStatus status, String result) {
 		this.status = status;
-		this.data = data;
-		this.message = message;
+		this.result = result;
 	}
 
-	public CheckResult() {
+	public static CheckResult success(String result) {
+		return new CheckResult(CheckStatus.SUCCESS, result);
 	}
 
-	public boolean isSuccessful() {
-		return status == CheckStatus.SUCCESS;
+	public static CheckResult fail(String result) {
+		return new CheckResult(CheckStatus.ERROR, result);
 	}
 
-	public static <T> CheckResult<T> success(T data) {
-		return new CheckResult<>(CheckStatus.SUCCESS, data, null);
-	}
-
-	public static <T> CheckResult<T> error(String message) {
-		return new CheckResult<>(CheckStatus.ERROR, null, message);
-	}
 }

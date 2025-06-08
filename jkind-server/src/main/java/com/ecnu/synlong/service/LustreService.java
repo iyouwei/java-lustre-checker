@@ -21,6 +21,7 @@ import jkind.translation.Specification;
 import jkind.translation.Translate;
 import jkind.util.Util;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -33,7 +34,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class LustreService {
 
-    public CheckResult<String> check(String[] args) {
+    public CheckResult check(String[] args) {
         try {
             JKindSettings settings = JKindArgumentParser.parse(args);
             Program program = parseLustre(settings.filename);
@@ -58,7 +59,7 @@ public class LustreService {
             return CheckResult.success(director.getResult());
         } catch (Exception e) {
             log.error("语法错误: {}", e.getMessage());
-            return CheckResult.error("存在语法错误: " + e.getMessage());
+            return CheckResult.fail("语法错误: " + e.getMessage());
         }
     }
 
@@ -100,22 +101,34 @@ public class LustreService {
         LustreParser parser = new LustreParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(new StdErrErrorListener());
-        LustreParser.ProgramContext program = parser.program();
-
-        if (parser.getNumberOfSyntaxErrors() > 0) {
-            System.exit(ExitCodes.PARSE_ERROR);
-        }
 
         try {
-            return flattenOrCheck(new LustreToAstVisitor().program(program));
+            LustreParser.ProgramContext programContext = parser.program();
+
+//            if (parser.getNumberOfSyntaxErrors() > 0) {
+//                System.exit(ExitCodes.PARSE_ERROR);
+//            }
+            return flattenOrCheck(new LustreToAstVisitor().program(programContext));
         } catch (LustreParseException e) {
-            StdErr.fatal(ExitCodes.PARSE_ERROR, e.getLocation(), e.getMessage());
+            StdErr.error(e.getLocation(), e.getMessage());
             throw e;
+        } catch (Exception e) {
+            Exception cause = new Exception(e.getMessage());
+            for (ANTLRErrorListener listener : parser.getErrorListeners()) {
+                if (listener instanceof StdErrErrorListener) {
+                    String firstError = ((StdErrErrorListener) listener).getErrors().stream()
+                            .findFirst()
+                            .map(SyntaxError::getErrorMessage)
+                            .orElse("发生未知错误");
+                    cause = new Exception(firstError);
+                }
+            }
+            throw cause;
         }
     }
 
     /**
-     * 下面抄的抄的jkind代码中的jkind/src/jkind/Main.java
+     * 下面抄的jkind代码中的jkind/src/jkind/Main.java
      * We allow extended ids (with ~ [ ] .) only when the program is a single
      * node with simple types. This is useful for working with output from
      * JLustre2Kind.
