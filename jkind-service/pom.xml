@@ -18,18 +18,10 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ecnu.aiyowei</groupId>
+            <groupId>de.uni-freiburg.informatik.ultimate</groupId>
             <artifactId>smtinterpol</artifactId>
-            <version>${project.version}</version>
-            <scope>system</scope>
-            <systemPath>/Users/wei/IdeaProjects/java-lustre-checker/lib/smtinterpol.jar</systemPath>
+            <version>2.5</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>de.uni-freiburg.informatik.ultimate</groupId>-->
-<!--            <artifactId>smtinterpol</artifactId>-->
-<!--            <version>2.5-1388-ga5a4ab0c</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>com.ecnu.aiyowei</groupId>
             <artifactId>jkind-common</artifactId>

@@ -17,19 +17,11 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- antlr4版本不要再升级了，这是测试过后最高能支持的版本 -->
         <dependency>
-            <groupId>com.ecnu.aiyowei</groupId>
-            <artifactId>antlr-4.4-complete</artifactId>
-            <version>${project.version}</version>
-            <scope>system</scope>
-            <systemPath>/Users/wei/IdeaProjects/java-lustre-checker/lib/antlr-4.4-complete.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>com.ecnu.aiyowei</groupId>
-            <artifactId>antlr-runtime-4.4</artifactId>
-            <version>${project.version}</version>
-            <scope>system</scope>
-            <systemPath>/Users/wei/IdeaProjects/java-lustre-checker/lib/antlr-runtime-4.4.jar</systemPath>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.9.3</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.jexcelapi</groupId>

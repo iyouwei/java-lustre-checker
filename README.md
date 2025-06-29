@@ -39,17 +39,6 @@ JKind是一个Lustre验证工具，主要用于验证Lustre程序的正确性。
 2. 在这里，把Synlong文件中的状态机等转化为Lustre文件，然后把这个lustre文件传递通过调用[LustreService](jkind-server/src/main/java/com/ecnu/synlong/service/LustreService.java)里的代码进行验证。
 
 ## 运行和测试
-### 事先修改
-有三个依赖是在lib目录下的jar包，分别是：
-- [antlr-4.4-complete.jar](lib/antlr-4.4-complete.jar)
-- [antlr-runtime-4.4.jar](lib/antlr-runtime-4.4.jar)
-- [smtinterpol.jar](lib/smtinterpol.jar)
-
-它们使用本地引入jar的方式，所以需要修改绝对路径为自己的本地路径
-- 修改[jkind-common/pom.xml](jkind-common/pom.xml)下的/Users/wei/IdeaProjects/java-lustre-checker/lib/antlr-4.4-complete.
-  jar和/Users/wei/IdeaProjects/java-lustre-checker/lib/antlr-runtime-4.4.jar
-- 修改[jkind-service/pom.xml](jkind-service/pom.xml)下的/Users/wei/IdeaProjects/java-lustre-checker/lib/smtinterpol.jar
-
 ### 启动
 ```bash
 # 1、编译
