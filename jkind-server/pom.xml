@@ -33,12 +33,12 @@
             <version>4.4.14</version>
         </dependency>
 
-        <!-- 和jkind中antlr4.4版本冲突, 所以统一用4.4. 但4.4mvn仓库其实找不到 -->
-<!--        <dependency>-->
-<!--            <groupId>org.antlr</groupId>-->
-<!--            <artifactId>antlr4-runtime</artifactId>-->
-<!--            <version>4.13.1</version>-->
-<!--        </dependency>-->
+        <!-- 这里和jkind中的antlr版本不一致，jkind中版本太老了，生成会出错 -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.13.1</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
