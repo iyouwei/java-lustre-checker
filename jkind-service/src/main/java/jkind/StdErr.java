@@ -4,6 +4,7 @@ import java.util.List;
 
 import jkind.analysis.Level;
 import jkind.lustre.Location;
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class StdErr {
@@ -31,12 +32,12 @@ public class StdErr {
 
 	public static void fatal(int exitCode, String text) {
 		error(text);
-		System.exit(exitCode);
+		ExceptionUtil.error("语法错误:" + exitCode);
 	}
 
 	public static void fatal(int exitCode, Location loc, String text) {
 		error(loc, text);
-		System.exit(exitCode);
+		ExceptionUtil.error("语法错误:" + exitCode);
 	}
 
 	public static void output(Level level, String text) {

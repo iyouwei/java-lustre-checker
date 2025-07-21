@@ -19,6 +19,7 @@ import jkind.lustre.parsing.ValidIdChecker;
 import jkind.translation.InlineSimpleEquations;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -138,7 +139,7 @@ public class LustreService {
             return new FlattenIds().visit(program);
         } else {
             if (!ValidIdChecker.check(program)) {
-                System.exit(ExitCodes.PARSE_ERROR);
+                ExceptionUtil.error("语法错误:" + ExitCodes.PARSE_ERROR);
             }
             return program;
         }

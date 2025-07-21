@@ -10,6 +10,7 @@ import jkind.lustre.Program;
 import jkind.realizability.engines.RealizabilityDirector;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JRealizability {
@@ -25,10 +26,10 @@ public class JRealizability {
 			program = Translate.translate(program);
 			Specification spec = new Specification(program);
 			int exitCode = new RealizabilityDirector(settings, spec).run();
-			System.exit(exitCode); // Kills all threads
+			ExceptionUtil.error("语法错误:" + exitCode);
 		} catch (Throwable t) {
 			t.printStackTrace();
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 
@@ -42,7 +43,7 @@ public class JRealizability {
 		valid = valid && realizablitityInputsUnique(main);
 
 		if (!valid) {
-			System.exit(ExitCodes.STATIC_ANALYSIS_ERROR);
+			ExceptionUtil.error("语法错误:" + ExitCodes.STATIC_ANALYSIS_ERROR);
 		}
 	}
 

@@ -10,6 +10,7 @@ import jkind.lustre.builders.ProgramBuilder;
 import jkind.translation.InlineSimpleEquations;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
+import jkind.util.ExceptionUtil;
 
 public class JKind {
 	public static void main(String[] args) {
@@ -33,10 +34,10 @@ public class JKind {
 			Specification analysisSpec = getAnalysisSpec(userSpec, settings);
 
 			int exitCode = new Director(settings, userSpec, analysisSpec).run();
-			System.exit(exitCode); // Kills all threads
+			ExceptionUtil.error("语法错误:" + exitCode);
 		} catch (Throwable t) {
 			t.printStackTrace();
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 

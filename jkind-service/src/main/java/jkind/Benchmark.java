@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class Benchmark {
@@ -34,7 +35,7 @@ public class Benchmark {
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 

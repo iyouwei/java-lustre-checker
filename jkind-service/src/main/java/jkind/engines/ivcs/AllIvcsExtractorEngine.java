@@ -44,6 +44,7 @@ import jkind.solvers.UnsatResult;
 import jkind.solvers.z3.Z3Solver;
 import jkind.translation.Lustre2Sexp;
 import jkind.translation.Specification;
+import jkind.util.ExceptionUtil;
 import jkind.util.LinkedBiMap;
 import jkind.util.SexpUtil;
 
@@ -709,7 +710,7 @@ public class AllIvcsExtractorEngine extends SolverBasedEngine {
 			out.close();
 		} catch (Throwable t) {
 			t.printStackTrace();
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 
 	}

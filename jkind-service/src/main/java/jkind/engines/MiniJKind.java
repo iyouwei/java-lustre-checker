@@ -18,6 +18,7 @@ import jkind.engines.messages.ValidMessage;
 import jkind.lustre.Program;
 import jkind.results.Counterexample;
 import jkind.translation.Specification;
+import jkind.util.ExceptionUtil;
 
 public class MiniJKind extends Engine {
 	public static final String NAME = "mini-jkind";
@@ -73,7 +74,7 @@ public class MiniJKind extends Engine {
 				status = UNKNOWN_WITH_EXCEPTION;
 			}
 		} catch (Throwable t) {
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 

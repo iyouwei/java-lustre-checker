@@ -18,7 +18,7 @@ public class SynlongConverter {
             SynlongToLustreVisitor visitor = new SynlongToLustreVisitor(context);
             return visitor.visit(tree);
         } catch (Exception e) {
-            throw new SynlongToLustreException("Synlong转Lustre失败", e);
+            throw new SynlongToLustreException(e.getMessage());
         }
     }
 
@@ -28,8 +28,13 @@ public class SynlongConverter {
     private static ParseTree parse(String synlongCode) {
         CharStream input = CharStreams.fromString(synlongCode);
         SynlongLexer lexer = new SynlongLexer(input);
+        // 使用自定义错误监听器
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new SynlongErrorListener());
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         SynlongParser parser = new SynlongParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(new SynlongErrorListener());
         return parser.program();
     }
 }

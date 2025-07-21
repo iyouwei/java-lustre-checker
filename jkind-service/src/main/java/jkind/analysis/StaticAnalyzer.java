@@ -24,6 +24,7 @@ import jkind.lustre.Program;
 import jkind.lustre.Type;
 import jkind.lustre.TypeDef;
 import jkind.lustre.VarDecl;
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class StaticAnalyzer {
@@ -83,14 +84,14 @@ public class StaticAnalyzer {
 		}
 
 		if (!valid) {
-			System.exit(ExitCodes.STATIC_ANALYSIS_ERROR);
+			ExceptionUtil.error("语法错误:" + ExitCodes.STATIC_ANALYSIS_ERROR);
 		}
 	}
 
 	private static void checkSolverLimitations(Program program, SolverOption solver) {
 		if (solver == SolverOption.MATHSAT) {
 			if (!MathSatFeatureChecker.check(program)) {
-				System.exit(ExitCodes.UNSUPPORTED_FEATURE);
+				ExceptionUtil.error("语法错误:" + ExitCodes.UNSUPPORTED_FEATURE);
 			}
 		}
 	}

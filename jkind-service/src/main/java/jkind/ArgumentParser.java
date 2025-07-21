@@ -2,6 +2,7 @@ package jkind;
 
 import java.math.BigInteger;
 
+import jkind.util.ExceptionUtil;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -40,18 +41,18 @@ public abstract class ArgumentParser {
 	protected void parseCommandLine(CommandLine line) {
 		if (line.hasOption(VERSION)) {
 			StdErr.println(name + " " + Main.getVersion());
-			System.exit(0);
+			ExceptionUtil.error("语法错误");
 		}
 
 		if (line.hasOption(HELP)) {
 			printHelp();
-			System.exit(0);
+			ExceptionUtil.error("语法错误");
 		}
 
 		String[] input = line.getArgs();
 		if (input.length != 1) {
 			printHelp();
-			System.exit(ExitCodes.INVALID_OPTIONS);
+			ExceptionUtil.error("语法错误:" + ExitCodes.INVALID_OPTIONS);
 		}
 		baseSettings.filename = input[0];
 	}

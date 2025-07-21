@@ -17,6 +17,7 @@ import jkind.slicing.DependencyMap;
 import jkind.slicing.LustreSlicer;
 import jkind.translation.RemoveEnumTypes;
 import jkind.translation.Translate;
+import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JFaultSeeder {
@@ -246,7 +247,7 @@ public class JFaultSeeder {
 			faultSeeder.execute();
 		} catch (Throwable t) {
 			t.printStackTrace();
-			System.exit(ExitCodes.UNCAUGHT_EXCEPTION);
+			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 }
