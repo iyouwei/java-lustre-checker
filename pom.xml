@@ -81,7 +81,6 @@
             <artifactId>commons-cli</artifactId>
             <version>1.2</version>
         </dependency>
-        <!--       antlr4版本不要再升级了，这是测试过后最高能支持的版本 -->
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
