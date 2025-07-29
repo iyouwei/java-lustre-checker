@@ -52,7 +52,9 @@ const_list: (const_expr (',' const_expr)*)?;
 const_label_expr: ID ':' const_expr;
 
 // User Operation Declaration
-user_op_decl: op_kind 'imported' ID params returns_clause;
+user_op_decl: op_kind ID params returns_clause op_body
+            | op_kind 'imported' ID params returns_clause
+            ;
 
 op_kind: 'function' | 'node';
 
@@ -93,16 +95,16 @@ returns_var: ID+;  // 修正：一个或多个ID
 state_machine: 'automaton' ID? state_decl+;
 
 state_decl: ('initial')? ('final')? 'state' ID
-           ('unless' transition (';' transition)*)?
+           ('unless' transition+)?
            data_def
-           ('until' transition (';' transition)*)?
+           ('until' transition+)?
            ;
 
 data_def: equation ';'
         | (local_block)? 'let' (equation ';')* 'tel'
         ;
 
-transition: 'if' expr ('resume' | 'restart') ID;
+transition: 'if' expr ('resume' | 'restart') ID ';';
 
 // Expressions
 expr: simple_expr
