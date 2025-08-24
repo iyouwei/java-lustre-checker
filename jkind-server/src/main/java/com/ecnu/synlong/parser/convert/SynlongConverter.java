@@ -2,9 +2,11 @@ package com.ecnu.synlong.parser.convert;
 
 import com.ecnu.synlong.parser.synlong.gen.SynlongLexer;
 import com.ecnu.synlong.parser.synlong.gen.SynlongParser;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+@Slf4j
 public class SynlongConverter {
     /**
      * 将Synlong代码转换为Lustre代码
@@ -18,6 +20,7 @@ public class SynlongConverter {
             SynlongToLustreVisitor visitor = new SynlongToLustreVisitor(context);
             return visitor.visit(tree);
         } catch (Exception e) {
+            log.error("Synlong转换Lustre失败: ", e);
             throw new SynlongToLustreException(e.getMessage());
         }
     }

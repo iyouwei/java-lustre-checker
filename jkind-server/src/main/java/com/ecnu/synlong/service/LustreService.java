@@ -59,7 +59,7 @@ public class LustreService {
             director.run();
             return CheckResult.success(director.getResult());
         } catch (Exception e) {
-            log.error("语法错误: {}", e.getMessage());
+            log.error("语法错误", e);
             return CheckResult.fail("语法错误: " + e.getMessage());
         }
     }

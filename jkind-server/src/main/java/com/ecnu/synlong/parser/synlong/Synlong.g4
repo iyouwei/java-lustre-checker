@@ -63,10 +63,10 @@ params: '(' (var_decls (';' var_decls)*)? ')';
 returns_clause: 'returns' params;
 
 op_body: ';'
-       | (local_block)? 'let' (equation ';')* 'tel' ';'?
+       | local_block? ('let' (equation ';')+ 'tel' ';'?)?
        ;
 
-local_block: 'var' (var_decls ';')*;
+local_block: 'var' (var_decls ';')+;
 
 // Variable Declarations - 修正：应该是逗号分隔的变量列表
 var_decls: var_id (',' var_id)* ':' type_expr (when_decl)? (last_decl)?;
@@ -101,7 +101,7 @@ state_decl: ('initial')? ('final')? 'state' ID
            ;
 
 data_def: equation ';'
-        | (local_block)? 'let' (equation ';')* 'tel'
+        | local_block? ('let' (equation ';')* 'tel')?
         ;
 
 transition: 'if' expr ('resume' | 'restart') ID ';';
