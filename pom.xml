@@ -27,7 +27,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <antlr.version>4.13.1</antlr.version>
+        <antlr.version>4.13.2</antlr.version>
     </properties>
 
     <dependencies>
@@ -84,7 +84,7 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <version>4.13.1</version>
+            <version>4.13.2</version>
         </dependency>
     </dependencies>
 

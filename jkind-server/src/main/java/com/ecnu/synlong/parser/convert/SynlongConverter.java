@@ -4,6 +4,7 @@ import com.ecnu.synlong.parser.synlong.gen.SynlongLexer;
 import com.ecnu.synlong.parser.synlong.gen.SynlongParser;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @Slf4j
@@ -38,6 +39,7 @@ public class SynlongConverter {
         SynlongParser parser = new SynlongParser(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(new SynlongErrorListener());
+        parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
         return parser.program();
     }
 }
