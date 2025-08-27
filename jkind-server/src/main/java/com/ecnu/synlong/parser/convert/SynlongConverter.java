@@ -16,7 +16,18 @@ public class SynlongConverter {
      */
     public static String convert(String synlongCode) {
         try {
-            ParseTree tree = parse(synlongCode);
+            CharStream input = CharStreams.fromString(synlongCode);
+            SynlongLexer lexer = new SynlongLexer(input);
+            // 使用自定义错误监听器
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(new SynlongErrorListener());
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            SynlongParser parser = new SynlongParser(tokens);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new SynlongErrorListener());
+            parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
+            ParseTree tree = parser.program();
+
             SynlongToLustreContext context = new SynlongToLustreContext();
             SynlongToLustreVisitor visitor = new SynlongToLustreVisitor(context);
             return visitor.visit(tree);
@@ -26,20 +37,4 @@ public class SynlongConverter {
         }
     }
 
-    /**
-     * 用ANTLR4解析Synlong代码，返回AST
-     */
-    private static ParseTree parse(String synlongCode) {
-        CharStream input = CharStreams.fromString(synlongCode);
-        SynlongLexer lexer = new SynlongLexer(input);
-        // 使用自定义错误监听器
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(new SynlongErrorListener());
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        SynlongParser parser = new SynlongParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new SynlongErrorListener());
-        parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-        return parser.program();
-    }
 }

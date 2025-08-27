@@ -11,9 +11,9 @@ program
 // Declarations
 //=========================
 decls
-    : type_block
-    | const_block
-    | user_op_decl
+    : type_block # TypeDeclaration
+    | const_block # ConstDeclaration
+    | user_op_decl # UserOpDeclaration
     ;
 
 //-------------------------
@@ -28,21 +28,26 @@ type_decl
     ;
 
 type_def
-    : type_expr
-    | 'enum' '{' ID (',' ID)* '}'
+    : type_expr # TypeExprDef
+    | 'enum' '{' ID (',' ID)* '}' # EnumDef
     ;
 
 type_expr
-    : 'bool'
-    | 'char'
-    | 'byte' | 'ubyte'
-    | 'short' | 'ushort'
-    | 'int' | 'uint'
-    | 'long' | 'ulong'
-    | 'float' | 'real'
-    | typevar
-    | '{' field_decl (',' field_decl)* '}'
-    | type_expr '^' const_expr
+    : 'bool' # BoolType
+    | 'char' # CharType
+    | 'byte' # ByteType
+    | 'ubyte' # UByteType
+    | 'short' # ShortType
+    | 'ushort' # UShortType
+    | 'int' # IntType
+    | 'uint' # UIntType
+    | 'long' # LongType
+    | 'ulong' # ULongType
+    | 'float' # FloatType
+    | 'real' # RealType
+    | typevar # TypeVar
+    | '{' field_decl (',' field_decl)* '}' # StructType
+    | type_expr '^' const_expr # ArrayType
     ;
 
 field_decl
@@ -65,14 +70,14 @@ const_decl
     ;
 
 const_expr
-    : ID
-    | atom
-    | unary_arith_op const_expr
-    | const_expr bin_arith_op const_expr
-    | const_expr bin_bool_op const_expr
-    | const_expr bin_relation_op const_expr
-    | '[' const_list ']'
-    | '{' const_label_expr (',' const_label_expr)* '}'
+    : ID # ConstId
+    | atom # ConstAtom
+    | unary_arith_op const_expr # ConstUnaryOp
+    | const_expr bin_arith_op const_expr # ConstBinArithOp
+    | const_expr bin_bool_op const_expr # ConstBinBoolOp
+    | const_expr bin_relation_op const_expr # ConstBinRelOp
+    | '[' const_list ']' # ConstArray
+    | '{' const_label_expr (',' const_label_expr)* '}' # ConstStruct
     ;
 
 const_list
@@ -87,13 +92,13 @@ const_label_expr
 // User Operation Declaration
 //=========================
 user_op_decl
-    : op_kind ID params returns_clause op_body
-    | op_kind 'imported' ID params returns_clause
+    : op_kind ID params returns_clause op_body # UserOpDecl
+    | op_kind 'imported' ID params returns_clause # ImportedOpDecl
     ;
 
 op_kind
-    : 'function'
-    | 'node'
+    : 'function' # FunctionKind
+    | 'node' # NodeKind
     ;
 
 params
@@ -105,8 +110,8 @@ returns_clause
     ;
 
 op_body
-    : ';'
-    | local_block? (LET (equation ';')+ TEL ';'?)?
+    : ';' # EmptyOpBody
+    | local_block? (LET (equation ';')+ TEL ';'?)? # FullOpBody
     ;
 
 local_block
@@ -126,8 +131,8 @@ when_decl
     ;
 
 clock_expr
-    : ID
-    | 'not' ID
+    : ID # ClockId
+    | 'not' ID # NotClock
     ;
 
 last_decl
@@ -138,13 +143,13 @@ last_decl
 // Equations
 //=========================
 equation
-    : lhs '=' expr
-    | state_machine return_statement
+    : lhs '=' expr # Assignment
+    | state_machine return_statement # StateMachineReturn
     ;
 
 lhs
-    : '(' ')'
-    | lhs_id (',' lhs_id)*
+    : '(' ')' # EmptyLhs
+    | lhs_id (',' lhs_id)* # LhsList
     ;
 
 lhs_id
@@ -173,52 +178,52 @@ state_decl
       (UNTIL transition+)?
     ;
 
-transition
-    : IF expr (RESUME | RESTART) ID ';'
-    ;
-
 // ★ 核心改动：state_body 不再可空，避免预测混乱
 state_body
-    : local_block LET (equation ';')* TEL
-    | LET (equation ';')* TEL
-    | local_block
-    | equation ';'
+    : local_block LET (equation ';')* TEL # StateBodyWithLocal
+    | LET (equation ';')* TEL # StateBodyWithoutLocal
+    | local_block # StateBodyLocalOnly
+    | equation ';' # StateBodySingleEq
+    ;
+
+transition
+    : IF expr (RESUME | RESTART) ID ';'
     ;
 
 //=========================
 // Expressions
 //=========================
 expr
-    : simple_expr
-    | 'last' '\'' ID
-    | tempo_expr
-    | bool_expr
-    | array_expr
-    | struct_expr
-    | mixed_constructor
-    | switch_expr
-    | apply_expr
+    : simple_expr # SimpleExpr
+    | 'last' '\'' ID # LastExpr
+    | tempo_expr # TempoExpr
+    | bool_expr # BoolExpr
+    | array_expr # ArrayExpr
+    | struct_expr # StructExpr
+    | mixed_constructor # MixedConstructor
+    | switch_expr # SwitchExpr
+    | apply_expr # ApplyExpr
     ;
 
 simple_expr
-    : ID
-    | atom
-    | simple_expr '[' const_expr ']'
-    | simple_expr '.' ID
-    | unary_arith_op simple_expr
-    | simple_expr bin_arith_op simple_expr
-    | simple_expr bin_bool_op simple_expr
-    | simple_expr bin_relation_op simple_expr
-    | '(' type_expr simple_expr ')'
+    : ID # SimpleId
+    | atom # SimpleAtom
+    | simple_expr '[' const_expr ']' # ArrayAccess
+    | simple_expr '.' ID # StructAccess
+    | unary_arith_op simple_expr # UnaryOp
+    | simple_expr bin_arith_op simple_expr # BinArithOp
+    | simple_expr bin_bool_op simple_expr # BinBoolOp
+    | simple_expr bin_relation_op simple_expr # BinRelOp
+    | '(' type_expr simple_expr ')' # TypeCast
     ;
 
 tempo_expr
-    : 'pre' simple_expr
-    | simple_expr '->' simple_expr
-    | 'fby' '(' simple_expr ';' const_expr ';' simple_expr ')'
-    | simple_expr 'fby' simple_expr
-    | simple_expr 'when' clock_expr
-    | 'merge' ID '(' simple_expr ',' simple_expr ')'
+    : 'pre' simple_expr # PreExpr
+    | simple_expr '->' simple_expr # ArrowExpr
+    | 'fby' '(' simple_expr ';' const_expr ';' simple_expr ')' # FbyExpr
+    | simple_expr 'fby' simple_expr # FbySimpleExpr
+    | simple_expr 'when' clock_expr # WhenExpr
+    | 'merge' ID '(' simple_expr ',' simple_expr ')' # MergeExpr
     ;
 
 bool_expr
@@ -226,10 +231,10 @@ bool_expr
     ;
 
 array_expr
-    : simple_expr '[' INTEGER '..' INTEGER ']'
-    | '(' simple_expr '.' index+ 'default' simple_expr ')'
-    | simple_expr '^' const_expr
-    | '[' list ']'
+    : simple_expr '[' INTEGER '..' INTEGER ']' # ArraySlice
+    | '(' simple_expr '.' index+ 'default' simple_expr ')' # ArrayDefault
+    | simple_expr '^' const_expr # ArrayRepeat
+    | '[' list ']' # ArrayConstructor
     ;
 
 struct_expr
@@ -245,8 +250,8 @@ mixed_constructor
     ;
 
 label_or_index
-    : '.' ID
-    | index
+    : '.' ID # Label
+    | index # IndexItem
     ;
 
 index
@@ -254,52 +259,74 @@ index
     ;
 
 switch_expr
-    : IF simple_expr 'then' simple_expr 'else' simple_expr
-    | '(' 'case' simple_expr 'of' case_expr+ ')'
+    : IF simple_expr 'then' simple_expr 'else' simple_expr # IfThenElse
+    | '(' 'case' simple_expr 'of' case_expr+ ')' # CaseOf
     ;
 
 case_expr
-    : '|' pattern ':' simple_expr
+    : '|' pattern ':' simple_expr # CaseExpr
     ;
 
 pattern
-    : ID
-    | CHAR
-    | '-'? INTEGER
-    | 'true'
-    | 'false'
-    | '_'
+    : ID # PatternId
+    | CHAR # PatternChar
+    | '-'? INTEGER # PatternInt
+    | 'true' # PatternTrue
+    | 'false' # PatternFalse
+    | '_' # PatternWildcard
     ;
 
 apply_expr
-    : prefix_operator '(' list ')'
-    | '(' iterator '<<' prefix_operator ';' const_expr '>>' ')' '(' list ')'
-    | '(' 'mapw' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr 'default' '(' list ')' ')' '(' list ')'
-    | '(' 'mapwi' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr 'default' '(' list ')' ')' '(' list ')'
-    | '(' 'foldw' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr ')' '(' list ')'
-    | '(' 'foldwi' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr ')' '(' list ')'
+    : prefix_operator '(' list ')' # SimpleApply
+    | '(' iterator '<<' prefix_operator ';' const_expr '>>' ')' '(' list ')' # IteratorApply
+    | '(' 'mapw' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr 'default' '(' list ')' ')' '(' list ')' # MapwApply
+    | '(' 'mapwi' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr 'default' '(' list ')' ')' '(' list ')' # MapwiApply
+    | '(' 'foldw' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr ')' '(' list ')' # FoldwApply
+    | '(' 'foldwi' '<<' prefix_operator ';' const_expr '>>' 'if' simple_expr ')' '(' list ')' # FoldwiApply
     ;
 
 prefix_operator
-    : ID
-    | prefix_unary_operator
-    | prefix_binary_operator
-    | '(' 'make' ID ')'
-    | '(' 'flatten' ID ')'
+    : ID # PrefixId
+    | prefix_unary_operator # PrefixUnaryOp
+    | prefix_binary_operator # PrefixBinaryOp
+    | '(' 'make' ID ')' # MakeOp
+    | '(' 'flatten' ID ')' # FlattenOp
     ;
 
 prefix_unary_operator
-    : '+$' | '-$' | 'not$' | 'short$' | 'int$' | 'float$' | 'real$'
+    : '+$' # PlusDollar
+    | '-$' # MinusDollar
+    | 'not$' # NotDollar
+    | 'short$' # ShortDollar
+    | 'int$' # IntDollar
+    | 'float$' # FloatDollar
+    | 'real$' # RealDollar
     ;
 
 prefix_binary_operator
-    : '$+$' | '$-$' | '$*$' | '$/$' | '$mod$' | '$div$'
-    | '$=$' | '$<>$' | '$<$' | '$>$' | '$<=$' | '$>=$'
-    | '$and$' | '$or$' | '$xor$'
+    : '$+$' # PlusOp
+    | '$-$' # MinusOp
+    | '$*$' # MulOp
+    | '$/$' # DivOp
+    | '$mod$' # ModOp
+    | '$div$' # DivIntOp
+    | '$=$' # EqOp
+    | '$<>$' # NeOp
+    | '$<$' # LtOp
+    | '$>$' # GtOp
+    | '$<=$' # LeOp
+    | '$>=$' # GeOp
+    | '$and$' # AndOp
+    | '$or$' # OrOp
+    | '$xor$' # XorOp
     ;
 
 iterator
-    : 'map' | 'fold' | 'mapi' | 'foldi' | 'mapfold'
+    : 'map' # Map
+    | 'fold' # Fold
+    | 'mapi' # Mapi
+    | 'foldi' # Foldi
+    | 'mapfold' # Mapfold
     ;
 
 list
@@ -310,34 +337,48 @@ list
 // Operators
 //=========================
 unary_arith_op
-    : '-' | '+' | 'not'
+    : '-' # Minus
+    | '+' # Plus
+    | 'not' # Not
     ;
 
 bin_arith_op
-    : '+' | '-' | '*' | '/' | 'mod' | 'div'
+    : '+' # Add
+    | '-' # Sub
+    | '*' # Mul
+    | '/' # Div
+    | 'mod' # Mod
+    | 'div' # DivInt
     ;
 
 bin_relation_op
-    : '=' | '<>' | '<' | '>' | '<=' | '>='
+    : '=' # Eq
+    | '<>' # Ne
+    | '<' # Lt
+    | '>' # Gt
+    | '<=' # Le
+    | '>=' # Ge
     ;
 
 bin_bool_op
-    : 'and' | 'or' | 'xor'
+    : 'and' # And
+    | 'or' # Or
+    | 'xor' # Xor
     ;
 
 //=========================
 // Atoms
 //=========================
 atom
-    : 'true'
-    | 'false'
-    | CHAR
-    | INTEGER
-    | UINT
-    | FLOAT
-    | REAL
-    | USHORT
-    | SHORT
+    : 'true' # True
+    | 'false' # False
+    | CHAR # Char
+    | INTEGER # Integer
+    | UINT # UInteger
+    | FLOAT # Float
+    | REAL # Real
+    | USHORT # UShort
+    | SHORT # Short
     ;
 
 //=========================
