@@ -726,6 +726,26 @@ public class SynlongParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
+	public static class VarTypeContext extends Type_exprContext {
+		public TypevarContext typevar() {
+			return getRuleContext(TypevarContext.class,0);
+		}
+		public VarTypeContext(Type_exprContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).enterVarType(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).exitVarType(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof SynlongVisitor ) return ((SynlongVisitor<? extends T>)visitor).visitVarType(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	@SuppressWarnings("CheckReturnValue")
 	public static class IntTypeContext extends Type_exprContext {
 		public IntTypeContext(Type_exprContext ctx) { copyFrom(ctx); }
 		@Override
@@ -796,26 +816,6 @@ public class SynlongParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof SynlongVisitor ) return ((SynlongVisitor<? extends T>)visitor).visitUShortType(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class TypeVarContext extends Type_exprContext {
-		public TypevarContext typevar() {
-			return getRuleContext(TypevarContext.class,0);
-		}
-		public TypeVarContext(Type_exprContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).enterTypeVar(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).exitTypeVar(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof SynlongVisitor ) return ((SynlongVisitor<? extends T>)visitor).visitTypeVar(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1001,7 +1001,7 @@ public class SynlongParser extends Parser {
 				break;
 			case ID:
 				{
-				_localctx = new TypeVarContext(_localctx);
+				_localctx = new VarTypeContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(169);

@@ -113,6 +113,13 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRealType(SynlongParser.RealTypeContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code VarType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarType(SynlongParser.VarTypeContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code IntType}
 	 * labeled alternative in {@link SynlongParser#type_expr}.
 	 * @param ctx the parse tree
@@ -140,13 +147,6 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitUShortType(SynlongParser.UShortTypeContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code TypeVar}
-	 * labeled alternative in {@link SynlongParser#type_expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTypeVar(SynlongParser.TypeVarContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code UByteType}
 	 * labeled alternative in {@link SynlongParser#type_expr}.

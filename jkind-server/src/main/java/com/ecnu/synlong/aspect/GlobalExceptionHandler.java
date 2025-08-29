@@ -11,6 +11,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public BaseResponse<String> handleException(Exception e) {
+        log.error("捕获到异常: ", e);
         return BaseResponse.error(e.getMessage());
     }
 }

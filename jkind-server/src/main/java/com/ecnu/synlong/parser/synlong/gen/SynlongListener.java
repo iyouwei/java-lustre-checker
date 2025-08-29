@@ -182,6 +182,18 @@ public interface SynlongListener extends ParseTreeListener {
 	 */
 	void exitRealType(SynlongParser.RealTypeContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code VarType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterVarType(SynlongParser.VarTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code VarType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitVarType(SynlongParser.VarTypeContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code IntType}
 	 * labeled alternative in {@link SynlongParser#type_expr}.
 	 * @param ctx the parse tree
@@ -229,18 +241,6 @@ public interface SynlongListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitUShortType(SynlongParser.UShortTypeContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code TypeVar}
-	 * labeled alternative in {@link SynlongParser#type_expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterTypeVar(SynlongParser.TypeVarContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code TypeVar}
-	 * labeled alternative in {@link SynlongParser#type_expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitTypeVar(SynlongParser.TypeVarContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code UByteType}
 	 * labeled alternative in {@link SynlongParser#type_expr}.

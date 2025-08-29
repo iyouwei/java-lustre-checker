@@ -197,6 +197,18 @@ public class SynlongBaseListener implements SynlongListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterVarType(SynlongParser.VarTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVarType(SynlongParser.VarTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIntType(SynlongParser.IntTypeContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -240,18 +252,6 @@ public class SynlongBaseListener implements SynlongListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitUShortType(SynlongParser.UShortTypeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterTypeVar(SynlongParser.TypeVarContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitTypeVar(SynlongParser.TypeVarContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

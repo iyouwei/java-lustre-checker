@@ -64,7 +64,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     }
 
     @Override
-    public String visitTypeVar(SynlongParser.TypeVarContext ctx) {
+    public String visitVarType(SynlongParser.VarTypeContext ctx) {
         return ctx.typevar().ID().getText();
     }
 

@@ -45,7 +45,7 @@ type_expr
     | 'ulong' # ULongType
     | 'float' # FloatType
     | 'real' # RealType
-    | typevar # TypeVar
+    | typevar # VarType
     | '{' field_decl (',' field_decl)* '}' # StructType
     | type_expr '^' const_expr # ArrayType
     ;
