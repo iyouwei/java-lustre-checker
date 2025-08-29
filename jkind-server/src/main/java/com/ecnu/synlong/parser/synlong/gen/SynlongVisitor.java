@@ -17,11 +17,26 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProgram(SynlongParser.ProgramContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#decls}.
+	 * Visit a parse tree produced by the {@code TypeDeclaration}
+	 * labeled alternative in {@link SynlongParser#decls}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDecls(SynlongParser.DeclsContext ctx);
+	T visitTypeDeclaration(SynlongParser.TypeDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstDeclaration}
+	 * labeled alternative in {@link SynlongParser#decls}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstDeclaration(SynlongParser.ConstDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UserOpDeclaration}
+	 * labeled alternative in {@link SynlongParser#decls}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUserOpDeclaration(SynlongParser.UserOpDeclarationContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#type_block}.
 	 * @param ctx the parse tree
@@ -35,17 +50,124 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitType_decl(SynlongParser.Type_declContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#type_def}.
+	 * Visit a parse tree produced by the {@code TypeExprDef}
+	 * labeled alternative in {@link SynlongParser#type_def}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitType_def(SynlongParser.Type_defContext ctx);
+	T visitTypeExprDef(SynlongParser.TypeExprDefContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#type_expr}.
+	 * Visit a parse tree produced by the {@code EnumDef}
+	 * labeled alternative in {@link SynlongParser#type_def}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitType_expr(SynlongParser.Type_exprContext ctx);
+	T visitEnumDef(SynlongParser.EnumDefContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BoolType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBoolType(SynlongParser.BoolTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LongType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLongType(SynlongParser.LongTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StructType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructType(SynlongParser.StructTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ULongType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitULongType(SynlongParser.ULongTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ShortType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitShortType(SynlongParser.ShortTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ByteType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitByteType(SynlongParser.ByteTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code RealType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRealType(SynlongParser.RealTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code IntType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIntType(SynlongParser.IntTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FloatType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFloatType(SynlongParser.FloatTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayType(SynlongParser.ArrayTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UShortType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUShortType(SynlongParser.UShortTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code TypeVar}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTypeVar(SynlongParser.TypeVarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UByteType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUByteType(SynlongParser.UByteTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code CharType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCharType(SynlongParser.CharTypeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UIntType}
+	 * labeled alternative in {@link SynlongParser#type_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUIntType(SynlongParser.UIntTypeContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#field_decl}.
 	 * @param ctx the parse tree
@@ -71,11 +193,61 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConst_decl(SynlongParser.Const_declContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#const_expr}.
+	 * Visit a parse tree produced by the {@code ConstId}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitConst_expr(SynlongParser.Const_exprContext ctx);
+	T visitConstId(SynlongParser.ConstIdContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstUnaryOp}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstUnaryOp(SynlongParser.ConstUnaryOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstBinArithOp}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstBinArithOp(SynlongParser.ConstBinArithOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstStruct}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstStruct(SynlongParser.ConstStructContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstArray}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstArray(SynlongParser.ConstArrayContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstAtom}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstAtom(SynlongParser.ConstAtomContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstBinRelOp}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstBinRelOp(SynlongParser.ConstBinRelOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ConstBinBoolOp}
+	 * labeled alternative in {@link SynlongParser#const_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstBinBoolOp(SynlongParser.ConstBinBoolOpContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#const_list}.
 	 * @param ctx the parse tree
@@ -89,17 +261,33 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConst_label_expr(SynlongParser.Const_label_exprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#user_op_decl}.
+	 * Visit a parse tree produced by the {@code UserOpDecl}
+	 * labeled alternative in {@link SynlongParser#user_op_decl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitUser_op_decl(SynlongParser.User_op_declContext ctx);
+	T visitUserOpDecl(SynlongParser.UserOpDeclContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#op_kind}.
+	 * Visit a parse tree produced by the {@code ImportedOpDecl}
+	 * labeled alternative in {@link SynlongParser#user_op_decl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOp_kind(SynlongParser.Op_kindContext ctx);
+	T visitImportedOpDecl(SynlongParser.ImportedOpDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FunctionKind}
+	 * labeled alternative in {@link SynlongParser#op_kind}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionKind(SynlongParser.FunctionKindContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NodeKind}
+	 * labeled alternative in {@link SynlongParser#op_kind}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNodeKind(SynlongParser.NodeKindContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#params}.
 	 * @param ctx the parse tree
@@ -113,11 +301,19 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitReturns_clause(SynlongParser.Returns_clauseContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#op_body}.
+	 * Visit a parse tree produced by the {@code EmptyOpBody}
+	 * labeled alternative in {@link SynlongParser#op_body}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOp_body(SynlongParser.Op_bodyContext ctx);
+	T visitEmptyOpBody(SynlongParser.EmptyOpBodyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FullOpBody}
+	 * labeled alternative in {@link SynlongParser#op_body}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFullOpBody(SynlongParser.FullOpBodyContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#local_block}.
 	 * @param ctx the parse tree
@@ -143,11 +339,19 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitWhen_decl(SynlongParser.When_declContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#clock_expr}.
+	 * Visit a parse tree produced by the {@code ClockId}
+	 * labeled alternative in {@link SynlongParser#clock_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitClock_expr(SynlongParser.Clock_exprContext ctx);
+	T visitClockId(SynlongParser.ClockIdContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NotClock}
+	 * labeled alternative in {@link SynlongParser#clock_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNotClock(SynlongParser.NotClockContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#last_decl}.
 	 * @param ctx the parse tree
@@ -155,17 +359,33 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLast_decl(SynlongParser.Last_declContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#equation}.
+	 * Visit a parse tree produced by the {@code Assignment}
+	 * labeled alternative in {@link SynlongParser#equation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitEquation(SynlongParser.EquationContext ctx);
+	T visitAssignment(SynlongParser.AssignmentContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#lhs}.
+	 * Visit a parse tree produced by the {@code StateMachineReturn}
+	 * labeled alternative in {@link SynlongParser#equation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitLhs(SynlongParser.LhsContext ctx);
+	T visitStateMachineReturn(SynlongParser.StateMachineReturnContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code EmptyLhs}
+	 * labeled alternative in {@link SynlongParser#lhs}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEmptyLhs(SynlongParser.EmptyLhsContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LhsList}
+	 * labeled alternative in {@link SynlongParser#lhs}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLhsList(SynlongParser.LhsListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#lhs_id}.
 	 * @param ctx the parse tree
@@ -197,11 +417,39 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitState_decl(SynlongParser.State_declContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#data_def}.
+	 * Visit a parse tree produced by the {@code StateBodyWithLocal}
+	 * labeled alternative in {@link SynlongParser#state_body}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitData_def(SynlongParser.Data_defContext ctx);
+	T visitStateBodyWithLocal(SynlongParser.StateBodyWithLocalContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StateBodyLocalOnly}
+	 * labeled alternative in {@link SynlongParser#state_body}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateBodyLocalOnly(SynlongParser.StateBodyLocalOnlyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StateBodyLetOnly}
+	 * labeled alternative in {@link SynlongParser#state_body}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateBodyLetOnly(SynlongParser.StateBodyLetOnlyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StateBodySingleEq}
+	 * labeled alternative in {@link SynlongParser#state_body}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateBodySingleEq(SynlongParser.StateBodySingleEqContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#let_block}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLet_block(SynlongParser.Let_blockContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#transition}.
 	 * @param ctx the parse tree
@@ -209,23 +457,173 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTransition(SynlongParser.TransitionContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#expr}.
+	 * Visit a parse tree produced by the {@code SimpleExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExpr(SynlongParser.ExprContext ctx);
+	T visitSimpleExpr(SynlongParser.SimpleExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#simple_expr}.
+	 * Visit a parse tree produced by the {@code LastExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSimple_expr(SynlongParser.Simple_exprContext ctx);
+	T visitLastExpr(SynlongParser.LastExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#tempo_expr}.
+	 * Visit a parse tree produced by the {@code TempoExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTempo_expr(SynlongParser.Tempo_exprContext ctx);
+	T visitTempoExpr(SynlongParser.TempoExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BoolExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBoolExpr(SynlongParser.BoolExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayExpr(SynlongParser.ArrayExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StructExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructExpr(SynlongParser.StructExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MixedConstructor}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMixedConstructor(SynlongParser.MixedConstructorContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SwitchExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSwitchExpr(SynlongParser.SwitchExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ApplyExpr}
+	 * labeled alternative in {@link SynlongParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitApplyExpr(SynlongParser.ApplyExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SimpleId}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSimpleId(SynlongParser.SimpleIdContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code StructAccess}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructAccess(SynlongParser.StructAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayAccess}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayAccess(SynlongParser.ArrayAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UnaryOp}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUnaryOp(SynlongParser.UnaryOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SimpleAtom}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSimpleAtom(SynlongParser.SimpleAtomContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinRelOp}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinRelOp(SynlongParser.BinRelOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code TypeCast}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTypeCast(SynlongParser.TypeCastContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinArithOp}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinArithOp(SynlongParser.BinArithOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BinBoolOp}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBinBoolOp(SynlongParser.BinBoolOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PreExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPreExpr(SynlongParser.PreExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrowExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrowExpr(SynlongParser.ArrowExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FbyExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFbyExpr(SynlongParser.FbyExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FbySimpleExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFbySimpleExpr(SynlongParser.FbySimpleExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code WhenExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhenExpr(SynlongParser.WhenExprContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MergeExpr}
+	 * labeled alternative in {@link SynlongParser#tempo_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMergeExpr(SynlongParser.MergeExprContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#bool_expr}.
 	 * @param ctx the parse tree
@@ -233,11 +631,33 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBool_expr(SynlongParser.Bool_exprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#array_expr}.
+	 * Visit a parse tree produced by the {@code ArraySlice}
+	 * labeled alternative in {@link SynlongParser#array_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitArray_expr(SynlongParser.Array_exprContext ctx);
+	T visitArraySlice(SynlongParser.ArraySliceContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayDefault}
+	 * labeled alternative in {@link SynlongParser#array_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayDefault(SynlongParser.ArrayDefaultContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayRepeat}
+	 * labeled alternative in {@link SynlongParser#array_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayRepeat(SynlongParser.ArrayRepeatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayConstructor}
+	 * labeled alternative in {@link SynlongParser#array_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayConstructor(SynlongParser.ArrayConstructorContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#struct_expr}.
 	 * @param ctx the parse tree
@@ -257,11 +677,19 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMixed_constructor(SynlongParser.Mixed_constructorContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#label_or_index}.
+	 * Visit a parse tree produced by the {@code Label}
+	 * labeled alternative in {@link SynlongParser#label_or_index}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitLabel_or_index(SynlongParser.Label_or_indexContext ctx);
+	T visitLabel(SynlongParser.LabelContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code IndexItem}
+	 * labeled alternative in {@link SynlongParser#label_or_index}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIndexItem(SynlongParser.IndexItemContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#index}.
 	 * @param ctx the parse tree
@@ -269,53 +697,334 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIndex(SynlongParser.IndexContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#switch_expr}.
+	 * Visit a parse tree produced by the {@code IfThenElse}
+	 * labeled alternative in {@link SynlongParser#switch_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSwitch_expr(SynlongParser.Switch_exprContext ctx);
+	T visitIfThenElse(SynlongParser.IfThenElseContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#case_expr}.
+	 * Visit a parse tree produced by the {@code CaseOf}
+	 * labeled alternative in {@link SynlongParser#switch_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCase_expr(SynlongParser.Case_exprContext ctx);
+	T visitCaseOf(SynlongParser.CaseOfContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#pattern}.
+	 * Visit a parse tree produced by the {@code CaseExpr}
+	 * labeled alternative in {@link SynlongParser#case_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPattern(SynlongParser.PatternContext ctx);
+	T visitCaseExpr(SynlongParser.CaseExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#apply_expr}.
+	 * Visit a parse tree produced by the {@code PatternId}
+	 * labeled alternative in {@link SynlongParser#pattern}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitApply_expr(SynlongParser.Apply_exprContext ctx);
+	T visitPatternId(SynlongParser.PatternIdContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#prefix_operator}.
+	 * Visit a parse tree produced by the {@code PatternChar}
+	 * labeled alternative in {@link SynlongParser#pattern}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrefix_operator(SynlongParser.Prefix_operatorContext ctx);
+	T visitPatternChar(SynlongParser.PatternCharContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#prefix_unary_operator}.
+	 * Visit a parse tree produced by the {@code PatternInt}
+	 * labeled alternative in {@link SynlongParser#pattern}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrefix_unary_operator(SynlongParser.Prefix_unary_operatorContext ctx);
+	T visitPatternInt(SynlongParser.PatternIntContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#prefix_binary_operator}.
+	 * Visit a parse tree produced by the {@code PatternTrue}
+	 * labeled alternative in {@link SynlongParser#pattern}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitPrefix_binary_operator(SynlongParser.Prefix_binary_operatorContext ctx);
+	T visitPatternTrue(SynlongParser.PatternTrueContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#iterator}.
+	 * Visit a parse tree produced by the {@code PatternFalse}
+	 * labeled alternative in {@link SynlongParser#pattern}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitIterator(SynlongParser.IteratorContext ctx);
+	T visitPatternFalse(SynlongParser.PatternFalseContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PatternWildcard}
+	 * labeled alternative in {@link SynlongParser#pattern}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPatternWildcard(SynlongParser.PatternWildcardContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SimpleApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSimpleApply(SynlongParser.SimpleApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code IteratorApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIteratorApply(SynlongParser.IteratorApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MapwApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapwApply(SynlongParser.MapwApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MapwiApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapwiApply(SynlongParser.MapwiApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FoldwApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFoldwApply(SynlongParser.FoldwApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FoldwiApply}
+	 * labeled alternative in {@link SynlongParser#apply_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFoldwiApply(SynlongParser.FoldwiApplyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PrefixId}
+	 * labeled alternative in {@link SynlongParser#prefix_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrefixId(SynlongParser.PrefixIdContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PrefixUnaryOp}
+	 * labeled alternative in {@link SynlongParser#prefix_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrefixUnaryOp(SynlongParser.PrefixUnaryOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PrefixBinaryOp}
+	 * labeled alternative in {@link SynlongParser#prefix_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrefixBinaryOp(SynlongParser.PrefixBinaryOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MakeOp}
+	 * labeled alternative in {@link SynlongParser#prefix_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMakeOp(SynlongParser.MakeOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FlattenOp}
+	 * labeled alternative in {@link SynlongParser#prefix_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFlattenOp(SynlongParser.FlattenOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PlusDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPlusDollar(SynlongParser.PlusDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MinusDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMinusDollar(SynlongParser.MinusDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NotDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNotDollar(SynlongParser.NotDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ShortDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitShortDollar(SynlongParser.ShortDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code IntDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIntDollar(SynlongParser.IntDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FloatDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFloatDollar(SynlongParser.FloatDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code RealDollar}
+	 * labeled alternative in {@link SynlongParser#prefix_unary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRealDollar(SynlongParser.RealDollarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code PlusOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPlusOp(SynlongParser.PlusOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MinusOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMinusOp(SynlongParser.MinusOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MulOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMulOp(SynlongParser.MulOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DivOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDivOp(SynlongParser.DivOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ModOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitModOp(SynlongParser.ModOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DivIntOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDivIntOp(SynlongParser.DivIntOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code EqOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEqOp(SynlongParser.EqOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NeOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNeOp(SynlongParser.NeOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LtOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLtOp(SynlongParser.LtOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code GtOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGtOp(SynlongParser.GtOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code LeOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLeOp(SynlongParser.LeOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code GeOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGeOp(SynlongParser.GeOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AndOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAndOp(SynlongParser.AndOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code OrOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOrOp(SynlongParser.OrOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code XorOp}
+	 * labeled alternative in {@link SynlongParser#prefix_binary_operator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXorOp(SynlongParser.XorOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Map}
+	 * labeled alternative in {@link SynlongParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMap(SynlongParser.MapContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Fold}
+	 * labeled alternative in {@link SynlongParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFold(SynlongParser.FoldContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Mapi}
+	 * labeled alternative in {@link SynlongParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapi(SynlongParser.MapiContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Foldi}
+	 * labeled alternative in {@link SynlongParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFoldi(SynlongParser.FoldiContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Mapfold}
+	 * labeled alternative in {@link SynlongParser#iterator}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMapfold(SynlongParser.MapfoldContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SynlongParser#list}.
 	 * @param ctx the parse tree
@@ -323,33 +1032,192 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitList(SynlongParser.ListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#unary_arith_op}.
+	 * Visit a parse tree produced by the {@code Minus}
+	 * labeled alternative in {@link SynlongParser#unary_arith_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitUnary_arith_op(SynlongParser.Unary_arith_opContext ctx);
+	T visitMinus(SynlongParser.MinusContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#bin_arith_op}.
+	 * Visit a parse tree produced by the {@code Plus}
+	 * labeled alternative in {@link SynlongParser#unary_arith_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBin_arith_op(SynlongParser.Bin_arith_opContext ctx);
+	T visitPlus(SynlongParser.PlusContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#bin_relation_op}.
+	 * Visit a parse tree produced by the {@code Not}
+	 * labeled alternative in {@link SynlongParser#unary_arith_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBin_relation_op(SynlongParser.Bin_relation_opContext ctx);
+	T visitNot(SynlongParser.NotContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#bin_bool_op}.
+	 * Visit a parse tree produced by the {@code Add}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitBin_bool_op(SynlongParser.Bin_bool_opContext ctx);
+	T visitAdd(SynlongParser.AddContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SynlongParser#atom}.
+	 * Visit a parse tree produced by the {@code Sub}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitAtom(SynlongParser.AtomContext ctx);
+	T visitSub(SynlongParser.SubContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Mul}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMul(SynlongParser.MulContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Div}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDiv(SynlongParser.DivContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Mod}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMod(SynlongParser.ModContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DivInt}
+	 * labeled alternative in {@link SynlongParser#bin_arith_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDivInt(SynlongParser.DivIntContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Eq}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEq(SynlongParser.EqContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Ne}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNe(SynlongParser.NeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Lt}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLt(SynlongParser.LtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Gt}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGt(SynlongParser.GtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Le}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLe(SynlongParser.LeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Ge}
+	 * labeled alternative in {@link SynlongParser#bin_relation_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGe(SynlongParser.GeContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code And}
+	 * labeled alternative in {@link SynlongParser#bin_bool_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAnd(SynlongParser.AndContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Or}
+	 * labeled alternative in {@link SynlongParser#bin_bool_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitOr(SynlongParser.OrContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Xor}
+	 * labeled alternative in {@link SynlongParser#bin_bool_op}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitXor(SynlongParser.XorContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code True}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTrue(SynlongParser.TrueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code False}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFalse(SynlongParser.FalseContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Char}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitChar(SynlongParser.CharContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Integer}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInteger(SynlongParser.IntegerContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UInteger}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUInteger(SynlongParser.UIntegerContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Float}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFloat(SynlongParser.FloatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Real}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReal(SynlongParser.RealContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code UShort}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUShort(SynlongParser.UShortContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Short}
+	 * labeled alternative in {@link SynlongParser#atom}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitShort(SynlongParser.ShortContext ctx);
 }

@@ -174,16 +174,20 @@ state_machine
 state_decl
     : INITIAL? FINAL? STATE ID
       (UNLESS transition+)?
-      state_body
+      ( {_input.LT(1).getType() == VAR}? state_body )
       (UNTIL transition+)?
     ;
 
 // ★ 核心改动：state_body 不再可空，避免预测混乱
 state_body
-    : local_block LET (equation ';')* TEL # StateBodyWithLocal
-    | LET (equation ';')* TEL # StateBodyWithoutLocal
+    : local_block let_block # StateBodyWithLocal
     | local_block # StateBodyLocalOnly
+    | let_block # StateBodyLetOnly
     | equation ';' # StateBodySingleEq
+    ;
+
+let_block
+    : LET (equation ';')* TEL
     ;
 
 transition
