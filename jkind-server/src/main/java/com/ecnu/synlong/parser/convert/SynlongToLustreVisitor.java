@@ -83,7 +83,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitArrayType(SynlongParser.ArrayTypeContext ctx) {
-        // 修复数组语法：从 type[size = value] 改为 type[size]
+        // 修复数组语法：从 type^size 改为 type[size]
         String typeExpr = visit(ctx.type_expr());
         String sizeExpr = visit(ctx.const_expr());
         
@@ -164,9 +164,9 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 // 对于极大的值，使用更合理的表示
                 if (Math.abs(doubleValue) > 1e10) {
                     if (doubleValue > 0) {
-                        return "1e10"; // 使用一个合理的上限值
+                        return "10000000000"; // 使用一个合理的上限值
                     } else {
-                        return "-1e10";
+                        return "-10000000000";
                     }
                 }
                 
@@ -413,13 +413,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     }
 
     @Override
-    public String visitStructExpr(SynlongParser.StructExprContext ctx) {
-        return visit(ctx.struct_expr());
-    }
-
-
-
-    @Override
     public String visitSwitchExpr(SynlongParser.SwitchExprContext ctx) {
         return visit(ctx.switch_expr());
     }
@@ -568,9 +561,20 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitTransition(SynlongParser.TransitionContext ctx) {
         // 修复转换表达式：从 "if expr resume/restart ID" 转换为 "expr"
         String condition = visit(ctx.expr());
-        String action = ctx.getText().contains("resume") ? "resume" : "restart";
-        String target = ctx.ID().getText();
-        return condition + " " + action + " " + target;
+        // 提取条件表达式，去掉if关键字
+        if (condition.startsWith("if ")) {
+            condition = condition.substring(3);
+        }
+        // 去掉resume/restart部分，只保留条件
+        if (condition.contains("resume") || condition.contains("restart")) {
+            int resumeIndex = condition.indexOf("resume");
+            int restartIndex = condition.indexOf("restart");
+            int cutIndex = Math.max(resumeIndex, restartIndex);
+            if (cutIndex > 0) {
+                condition = condition.substring(0, cutIndex).trim();
+            }
+        }
+        return condition;
     }
 
     // 处理原子表达式 - 修复数值转换
@@ -692,18 +696,35 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     // 处理数组访问和更新
     @Override
     public String visitArrayAccess(SynlongParser.ArrayAccessContext ctx) {
-        return visit(ctx.simple_expr()) + "[" + visit(ctx.const_expr()) + "]";
+        String array = visit(ctx.simple_expr());
+        String index = visit(ctx.const_expr());
+        if (array != null && index != null) {
+            return array + "[" + index + "]";
+        }
+        return "";
     }
 
     @Override
     public String visitStructAccess(SynlongParser.StructAccessContext ctx) {
-        return visit(ctx.simple_expr()) + "." + ctx.ID().getText();
+        String struct = visit(ctx.simple_expr());
+        String field = ctx.ID().getText();
+        if (struct != null) {
+            return struct + "." + field;
+        }
+        return "";
     }
 
     // 处理条件表达式
     @Override
     public String visitIfThenElse(SynlongParser.IfThenElseContext ctx) {
-        return "if " + visit(ctx.simple_expr(0)) + " then " + visit(ctx.simple_expr(1)) + " else " + visit(ctx.simple_expr(2));
+        String condition = visit(ctx.simple_expr(0));
+        String thenExpr = visit(ctx.simple_expr(1));
+        String elseExpr = visit(ctx.simple_expr(2));
+        
+        if (condition != null && thenExpr != null && elseExpr != null) {
+            return "if " + condition + " then " + thenExpr + " else " + elseExpr;
+        }
+        return "";
     }
 
     // 处理函数调用
@@ -727,7 +748,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         }
         sb.append("(");
         if (ctx.list() != null) {
-            sb.append(visit(ctx.list()));
+            String args = visit(ctx.list());
+            if (args != null && !args.trim().isEmpty()) {
+                sb.append(args);
+            }
         }
         sb.append(")");
         return sb.toString();
@@ -794,9 +818,353 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitLet_block(SynlongParser.Let_blockContext ctx) {
         StringBuilder sb = new StringBuilder("let\n");
         for (SynlongParser.EquationContext eq : ctx.equation()) {
-            sb.append(visit(eq)).append(";\n");
+            String equation = visit(eq);
+            if (equation != null && !equation.trim().isEmpty()) {
+                sb.append(equation).append(";\n");
+            }
         }
         sb.append("tel");
         return sb.toString();
+    }
+
+    // 处理参数列表
+    @Override
+    public String visitList(SynlongParser.ListContext ctx) {
+        if (ctx.simple_expr().isEmpty()) {
+            return "";
+        }
+        
+        List<String> args = new ArrayList<>();
+        for (SynlongParser.Simple_exprContext expr : ctx.simple_expr()) {
+            String arg = visit(expr);
+            if (arg != null && !arg.trim().isEmpty()) {
+                args.add(arg);
+            }
+        }
+        
+        return String.join(", ", args);
+    }
+
+    // 添加缺失的访问方法
+    @Override
+    public String visitSimpleId(SynlongParser.SimpleIdContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitSimpleAtom(SynlongParser.SimpleAtomContext ctx) {
+        return visit(ctx.atom());
+    }
+
+    @Override
+    public String visitUnaryOp(SynlongParser.UnaryOpContext ctx) {
+        String op = visit(ctx.unary_arith_op());
+        String expr = visit(ctx.simple_expr());
+        if (op != null && expr != null) {
+            return op + expr;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitBinArithOp(SynlongParser.BinArithOpContext ctx) {
+        String left = visit(ctx.simple_expr(0));
+        String op = visit(ctx.bin_arith_op());
+        String right = visit(ctx.simple_expr(1));
+        if (left != null && op != null && right != null) {
+            return left + " " + op + " " + right;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitBinBoolOp(SynlongParser.BinBoolOpContext ctx) {
+        String left = visit(ctx.simple_expr(0));
+        String op = visit(ctx.bin_bool_op());
+        String right = visit(ctx.simple_expr(1));
+        if (left != null && op != null && right != null) {
+            return left + " " + op + " " + right;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitBinRelOp(SynlongParser.BinRelOpContext ctx) {
+        String left = visit(ctx.simple_expr(0));
+        String op = visit(ctx.bin_relation_op());
+        String right = visit(ctx.simple_expr(1));
+        if (left != null && op != null && right != null) {
+            return left + " " + op + " " + right;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitTypeCast(SynlongParser.TypeCastContext ctx) {
+        String type = visit(ctx.type_expr());
+        String expr = visit(ctx.simple_expr());
+        if (type != null && expr != null) {
+            return "(" + type + ") " + expr;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitPreExpr(SynlongParser.PreExprContext ctx) {
+        String expr = visit(ctx.simple_expr());
+        if (expr != null) {
+            return "pre(" + expr + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitArrowExpr(SynlongParser.ArrowExprContext ctx) {
+        String left = visit(ctx.simple_expr(0));
+        String right = visit(ctx.simple_expr(1));
+        if (left != null && right != null) {
+            return left + " -> " + right;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitFbyExpr(SynlongParser.FbyExprContext ctx) {
+        String init = visit(ctx.simple_expr(0));
+        String delay = visit(ctx.const_expr());
+        String expr = visit(ctx.simple_expr(1));
+        if (init != null && delay != null && expr != null) {
+            return "fby(" + init + "; " + delay + "; " + expr + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitFbySimpleExpr(SynlongParser.FbySimpleExprContext ctx) {
+        String left = visit(ctx.simple_expr(0));
+        String right = visit(ctx.simple_expr(1));
+        if (left != null && right != null) {
+            return left + " fby " + right;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitWhenExpr(SynlongParser.WhenExprContext ctx) {
+        String expr = visit(ctx.simple_expr());
+        String clock = visit(ctx.clock_expr());
+        if (expr != null && clock != null) {
+            return expr + " when " + clock;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitMergeExpr(SynlongParser.MergeExprContext ctx) {
+        String clock = ctx.ID().getText();
+        String trueExpr = visit(ctx.simple_expr(0));
+        String falseExpr = visit(ctx.simple_expr(1));
+        if (trueExpr != null && falseExpr != null) {
+            return "merge " + clock + "(" + trueExpr + ", " + falseExpr + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitArraySlice(SynlongParser.ArraySliceContext ctx) {
+        String array = visit(ctx.simple_expr());
+        String start = ctx.INTEGER(0).getText();
+        String end = ctx.INTEGER(1).getText();
+        if (array != null) {
+            return array + "[" + start + ".." + end + "]";
+        }
+        return "";
+    }
+
+//    @Override
+//    public String visitArrayDefault(SynlongParser.ArrayDefaultContext ctx) {
+//        String array = visit(ctx.simple_expr());
+//        String defaultValue = visit(ctx.simple_expr(1));
+//        if (array != null && defaultValue != null) {
+//            return "(" + array + ".index default " + defaultValue + ")";
+//        }
+//        return "";
+//    }
+
+    @Override
+    public String visitArrayRepeat(SynlongParser.ArrayRepeatContext ctx) {
+        String array = visit(ctx.simple_expr());
+        String count = visit(ctx.const_expr());
+        if (array != null && count != null) {
+            return array + "^" + count;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitArrayConstructor(SynlongParser.ArrayConstructorContext ctx) {
+        String list = visit(ctx.list());
+        if (list != null) {
+            return "[" + list + "]";
+        }
+        return "[]";
+    }
+
+    @Override
+    public String visitLabel_expr(SynlongParser.Label_exprContext ctx) {
+        String label = ctx.ID().getText();
+        String value = visit(ctx.simple_expr());
+        if (label != null && value != null) {
+            return label + ": " + value;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitCaseOf(SynlongParser.CaseOfContext ctx) {
+        String expr = visit(ctx.simple_expr());
+        List<String> cases = new ArrayList<>();
+        for (SynlongParser.Case_exprContext caseExpr : ctx.case_expr()) {
+            String caseItem = visit(caseExpr);
+            if (caseItem != null && !caseItem.trim().isEmpty()) {
+                cases.add(caseItem);
+            }
+        }
+        if (expr != null && !cases.isEmpty()) {
+            return "(case " + expr + " of " + String.join(" ", cases) + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitCaseExpr(SynlongParser.CaseExprContext ctx) {
+        String pattern = visit(ctx.pattern());
+        String expr = visit(ctx.simple_expr());
+        if (pattern != null && expr != null) {
+            return "| " + pattern + ": " + expr;
+        }
+        return "";
+    }
+
+    @Override
+    public String visitPatternId(SynlongParser.PatternIdContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitPatternChar(SynlongParser.PatternCharContext ctx) {
+        return ctx.CHAR().getText();
+    }
+
+    @Override
+    public String visitPatternInt(SynlongParser.PatternIntContext ctx) {
+        return ctx.INTEGER().getText();
+    }
+
+    @Override
+    public String visitPatternTrue(SynlongParser.PatternTrueContext ctx) {
+        return "true";
+    }
+
+    @Override
+    public String visitPatternFalse(SynlongParser.PatternFalseContext ctx) {
+        return "false";
+    }
+
+    @Override
+    public String visitPatternWildcard(SynlongParser.PatternWildcardContext ctx) {
+        return "_";
+    }
+
+    @Override
+    public String visitIteratorApply(SynlongParser.IteratorApplyContext ctx) {
+        String iterator = visit(ctx.iterator());
+        String op = visit(ctx.prefix_operator());
+        String count = visit(ctx.const_expr());
+        String list = visit(ctx.list());
+        if (iterator != null && op != null && count != null && list != null) {
+            return "(" + iterator + " << " + op + "; " + count + " >>)(" + list + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitFoldwApply(SynlongParser.FoldwApplyContext ctx) {
+        String op = visit(ctx.prefix_operator());
+        String count = visit(ctx.const_expr());
+        String condition = visit(ctx.simple_expr());
+        String list = visit(ctx.list());
+        if (op != null && count != null && condition != null && list != null) {
+            return "(foldw << " + op + "; " + count + " >> if " + condition + ")(" + list + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitFoldwiApply(SynlongParser.FoldwiApplyContext ctx) {
+        String op = visit(ctx.prefix_operator());
+        String count = visit(ctx.const_expr());
+        String condition = visit(ctx.simple_expr());
+        String list = visit(ctx.list());
+        if (op != null && count != null && condition != null && list != null) {
+            return "(foldwi << " + op + "; " + count + " >> if " + condition + ")(" + list + ")";
+        }
+        return "";
+    }
+
+    @Override
+    public String visitPrefixId(SynlongParser.PrefixIdContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitPrefixUnaryOp(SynlongParser.PrefixUnaryOpContext ctx) {
+        return ctx.prefix_unary_operator().getText();
+    }
+
+    @Override
+    public String visitPrefixBinaryOp(SynlongParser.PrefixBinaryOpContext ctx) {
+        return ctx.prefix_binary_operator().getText();
+    }
+
+    @Override
+    public String visitFlattenOp(SynlongParser.FlattenOpContext ctx) {
+        String typeName = ctx.ID().getText();
+        return "flatten_" + typeName;
+    }
+
+    @Override
+    public String visitMap(SynlongParser.MapContext ctx) {
+        return "map";
+    }
+
+    @Override
+    public String visitFold(SynlongParser.FoldContext ctx) {
+        return "fold";
+    }
+
+    @Override
+    public String visitMapi(SynlongParser.MapiContext ctx) {
+        return "mapi";
+    }
+
+    @Override
+    public String visitFoldi(SynlongParser.FoldiContext ctx) {
+        return "foldi";
+    }
+
+    @Override
+    public String visitMapfold(SynlongParser.MapfoldContext ctx) {
+        return "mapfold";
+    }
+
+    @Override
+    public String visitClockId(SynlongParser.ClockIdContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitNotClock(SynlongParser.NotClockContext ctx) {
+        return "not " + ctx.ID().getText();
     }
 }

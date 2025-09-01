@@ -113,6 +113,8 @@ public class LustreService {
             StdErr.error(e.getLocation(), e.getMessage());
             throw e;
         } catch (Exception e) {
+            // TODO 后面删掉
+            log.error("1111错误：", e);
             Exception cause = new Exception(e.getMessage());
             for (ANTLRErrorListener listener : parser.getErrorListeners()) {
                 if (listener instanceof StdErrErrorListener) {
