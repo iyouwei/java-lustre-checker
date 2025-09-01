@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import jkind.util.ExceptionUtil;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -50,7 +49,7 @@ public class Main {
 		if (args.length == 0) {
 			StdErr.println("JKind Suite " + getVersion());
 			StdErr.println(availableEntryPoints);
-			ExceptionUtil.error("语法错误");
+			throw new RuntimeException("语法错误");
 		}
 
 		String entryPoint = args[0];
@@ -80,7 +79,7 @@ public class Main {
 		default:
 			StdErr.error("unknown entry point: " + entryPoint);
 			StdErr.println(availableEntryPoints);
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNKNOWN_ENTRY_POINT);
+			throw new RuntimeException("语法错误:" + ExitCodes.UNKNOWN_ENTRY_POINT);
 		}
 	}
 
@@ -115,7 +114,7 @@ public class Main {
 		ProgramContext program = parser.program();
 
 		if (parser.getNumberOfSyntaxErrors() > 0) {
-			ExceptionUtil.error("语法错误:" + ExitCodes.PARSE_ERROR);
+			throw new RuntimeException("语法错误:" + ExitCodes.PARSE_ERROR);
 		}
 
 		try {
@@ -136,7 +135,7 @@ public class Main {
 			return new FlattenIds().visit(program);
 		} else {
 			if (!ValidIdChecker.check(program)) {
-				ExceptionUtil.error("语法错误:" + ExitCodes.PARSE_ERROR);
+				throw new RuntimeException("语法错误:" + ExitCodes.PARSE_ERROR);
 			}
 			return program;
 		}

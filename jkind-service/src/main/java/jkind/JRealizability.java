@@ -10,7 +10,6 @@ import jkind.lustre.Program;
 import jkind.realizability.engines.RealizabilityDirector;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JRealizability {
@@ -20,16 +19,16 @@ public class JRealizability {
 			String filename = settings.filename;
 			Program program = Main.parseLustre(filename);
 
-			StaticAnalyzer.check(program, SolverOption.Z3, settings);
+			StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
+			staticAnalyzer.check(program, SolverOption.Z3, settings);
 			realizabilitySpecificChecks(program);
 
 			program = Translate.translate(program);
 			Specification spec = new Specification(program);
 			int exitCode = new RealizabilityDirector(settings, spec).run();
-			ExceptionUtil.error("语法错误:" + exitCode);
-		} catch (Throwable t) {
-			t.printStackTrace();
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
+			throw new RuntimeException("语法错误:" + exitCode);
+		} catch (Exception e) {
+			throw new RuntimeException("JRealizability error:" + e);
 		}
 	}
 
@@ -43,7 +42,7 @@ public class JRealizability {
 		valid = valid && realizablitityInputsUnique(main);
 
 		if (!valid) {
-			ExceptionUtil.error("语法错误:" + ExitCodes.STATIC_ANALYSIS_ERROR);
+			throw new RuntimeException("语法错误:" + ExitCodes.STATIC_ANALYSIS_ERROR);
 		}
 	}
 

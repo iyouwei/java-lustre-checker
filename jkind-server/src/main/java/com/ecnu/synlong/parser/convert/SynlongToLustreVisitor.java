@@ -28,7 +28,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append("type ").append(typeDecl.ID().getText());
             if (typeDecl.type_def() != null) {
                 String typeDef = visit(typeDecl.type_def());
-                // 处理analog、binary等类型，转换为struct
                 typeDef = convertSynlongTypeToLustre(typeDef);
                 sb.append(" = ").append(typeDef);
             }
@@ -76,7 +75,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         List<String> fields = new ArrayList<>();
         for (SynlongParser.Field_declContext f : ctx.field_decl()) {
             String fieldType = visit(f.type_expr());
-            // 处理字段类型中的analog、binary等类型
             fieldType = convertSynlongTypeToLustre(fieldType);
             fields.add(f.ID().getText() + ": " + fieldType);
         }
@@ -110,7 +108,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append("const ").append(constDecl.ID().getText());
             if (constDecl.type_expr() != null) {
                 String typeExpr = visit(constDecl.type_expr());
-                // 处理analog、binary等类型，转换为struct
                 typeExpr = convertSynlongTypeToLustre(typeExpr);
                 sb.append(" : ").append(typeExpr);
             }
@@ -305,7 +302,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             }
         }
         String typeExpr = visit(ctx.type_expr());
-        // 处理analog、binary等类型
         typeExpr = convertSynlongTypeToLustre(typeExpr);
         sb.append(" : ").append(typeExpr);
         return sb.toString();

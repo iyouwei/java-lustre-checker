@@ -22,8 +22,8 @@ public class StdErrErrorListener extends BaseErrorListener {
 			String msg, RecognitionException e) {
 		String errorMessage = "在第" + line + "行-第" + charPositionInLine + "列存在语法错误，具体信息：" + msg;
 		this.errors.add(new SyntaxError(msg, e, errorMessage));
-		StdErr.println(errorMessage);
-		StdErr.showLocation(new Location(line, charPositionInLine));
+//		StdErr.println(errorMessage);
+//		StdErr.showLocation(new Location(line, charPositionInLine));
 	}
 
 }

@@ -2,13 +2,15 @@ package jkind;
 
 import java.util.List;
 
+import jkind.analysis.ErrorCollector;
 import jkind.analysis.Level;
 import jkind.lustre.Location;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class StdErr {
 	private static List<String> locationReference;
+
+	private final ErrorCollector collector = new ErrorCollector();
 
 	public static void setLocationReference(List<String> locationReference) {
 		StdErr.locationReference = locationReference;
@@ -32,12 +34,12 @@ public class StdErr {
 
 	public static void fatal(int exitCode, String text) {
 		error(text);
-		ExceptionUtil.error("语法错误:" + exitCode);
+		throw new RuntimeException("错误:" + exitCode);
 	}
 
 	public static void fatal(int exitCode, Location loc, String text) {
 		error(loc, text);
-		ExceptionUtil.error("语法错误:" + exitCode);
+		throw new RuntimeException("错误:" + exitCode);
 	}
 
 	public static void output(Level level, String text) {

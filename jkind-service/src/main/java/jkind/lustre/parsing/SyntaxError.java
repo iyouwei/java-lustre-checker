@@ -1,8 +1,10 @@
 package jkind.lustre.parsing;
 
+import lombok.Getter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 
+@Getter
 public class SyntaxError extends RecognitionException {
 
     private final String errorMessage;
@@ -12,10 +14,6 @@ public class SyntaxError extends RecognitionException {
         this.setOffendingToken(e.getOffendingToken());
         this.initCause(e);
         this.errorMessage = errorMessage;
-    }
-
-    public String getErrorMessage() {
-        return this.errorMessage;
     }
 
 }

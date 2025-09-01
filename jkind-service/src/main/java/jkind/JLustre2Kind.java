@@ -13,11 +13,11 @@ import jkind.slicing.DependencyMap;
 import jkind.slicing.LustreSlicer;
 import jkind.translation.RemoveEnumTypes;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JLustre2Kind {
 	public static void main(String args[]) {
+		StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
 		try {
 			JLustre2KindSettings settings = JLustre2KindArgumentParser.parse(args);
 			String filename = settings.filename;
@@ -28,7 +28,7 @@ public class JLustre2Kind {
 			String outFilename = filename.substring(0, filename.length() - 4) + ".kind.lus";
 
 			Program program = Main.parseLustre(filename);
-			StaticAnalyzer.check(program, SolverOption.Z3, settings);
+			staticAnalyzer.check(program, SolverOption.Z3, settings);
 
 			program = Translate.translate(program);
 			program = RemoveEnumTypes.program(program);
@@ -52,9 +52,8 @@ public class JLustre2Kind {
 				Util.writeToFile(program.toString(), new File(outFilename));
 				System.out.println("Wrote " + outFilename);
 			}
-		} catch (Throwable t) {
-			t.printStackTrace();
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
+		} catch (Exception e) {
+			throw new RuntimeException("JLustre2Kind error:" + e);
 		}
 	}
 }

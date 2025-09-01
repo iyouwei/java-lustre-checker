@@ -10,7 +10,6 @@ import jkind.lustre.builders.ProgramBuilder;
 import jkind.translation.InlineSimpleEquations;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 
 public class JKind {
 	public static void main(String[] args) {
@@ -19,7 +18,8 @@ public class JKind {
 			Program program = Main.parseLustre(settings.filename);
 			program = setMainNode(program, settings.main);
 
-			StaticAnalyzer.check(program, settings.solver, settings);
+			StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
+			staticAnalyzer.check(program, settings.solver, settings);
 			if (!LinearChecker.isLinear(program)) {
 				if (settings.pdrMax > 0) {
 					StdErr.warning("PDR not available for some properties due to non-linearities");
@@ -34,10 +34,9 @@ public class JKind {
 			Specification analysisSpec = getAnalysisSpec(userSpec, settings);
 
 			int exitCode = new Director(settings, userSpec, analysisSpec).run();
-			ExceptionUtil.error("语法错误:" + exitCode);
-		} catch (Throwable t) {
-			t.printStackTrace();
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
+			throw new RuntimeException("语法错误:" + exitCode);
+		} catch (Exception e) {
+			throw new RuntimeException("JKind error:" + e);
 		}
 	}
 

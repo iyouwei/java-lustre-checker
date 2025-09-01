@@ -19,7 +19,6 @@ import jkind.lustre.parsing.ValidIdChecker;
 import jkind.translation.InlineSimpleEquations;
 import jkind.translation.Specification;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -41,7 +40,8 @@ public class LustreService {
             Program program = parseLustre(settings.filename);
             program = setMainNode(program, settings.main);
 
-            StaticAnalyzer.check(program, settings.solver, settings);
+            StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
+            staticAnalyzer.check(program, settings.solver, settings);
             if (!LinearChecker.isLinear(program)) {
                 if (settings.pdrMax > 0) {
                     StdErr.warning("PDR not available for some properties due to non-linearities");
@@ -59,8 +59,7 @@ public class LustreService {
             director.run();
             return CheckResult.success(director.getResult());
         } catch (Exception e) {
-            log.error("语法错误", e);
-            return CheckResult.fail("语法错误: " + e.getMessage());
+            throw new RuntimeException("Lustre验证失败: " + e.getMessage(), e);
         }
     }
 
@@ -139,7 +138,7 @@ public class LustreService {
             return new FlattenIds().visit(program);
         } else {
             if (!ValidIdChecker.check(program)) {
-                ExceptionUtil.error("语法错误:" + ExitCodes.PARSE_ERROR);
+                throw new RuntimeException("语法错误:" + ExitCodes.PARSE_ERROR);
             }
             return program;
         }

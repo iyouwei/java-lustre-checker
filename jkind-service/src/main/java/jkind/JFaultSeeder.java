@@ -17,7 +17,6 @@ import jkind.slicing.DependencyMap;
 import jkind.slicing.LustreSlicer;
 import jkind.translation.RemoveEnumTypes;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JFaultSeeder {
@@ -63,7 +62,8 @@ public class JFaultSeeder {
 		}
 
 		Program program = Main.parseLustre(settings.filename);
-		StaticAnalyzer.check(program, SolverOption.Z3, settings);
+		StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
+		staticAnalyzer.check(program, SolverOption.Z3, settings);
 
 		program = Translate.translate(program);
 		program = RemoveEnumTypes.program(program);
@@ -247,7 +247,7 @@ public class JFaultSeeder {
 			faultSeeder.execute();
 		} catch (Throwable t) {
 			t.printStackTrace();
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
+			throw new RuntimeException("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
 		}
 	}
 }

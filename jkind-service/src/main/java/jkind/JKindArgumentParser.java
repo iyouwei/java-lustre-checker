@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.joining;
 import java.util.Arrays;
 import java.util.List;
 
-import jkind.util.ExceptionUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
@@ -83,7 +82,7 @@ public class JKindArgumentParser extends ArgumentParser {
 		if (line.hasOption(VERSION)) {
 			StdErr.println(name + " " + Main.getVersion());
 			printDectectedSolvers();
-			ExceptionUtil.error("语法错误");
+			throw new RuntimeException("语法错误");
 		}
 
 		super.parseCommandLine(line);
@@ -193,8 +192,7 @@ public class JKindArgumentParser extends ArgumentParser {
 
 		StdErr.error("unknown solver: " + solver);
 		StdErr.println("Valid options: " + options);
-		ExceptionUtil.error("语法错误:" + ExitCodes.INVALID_OPTIONS);
-		return null;
+		throw new RuntimeException("语法错误:" + ExitCodes.INVALID_OPTIONS);
 	}
 
 	private void checkSettings() {

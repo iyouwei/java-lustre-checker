@@ -8,7 +8,6 @@ import jkind.lustre.EnumType;
 import jkind.lustre.Program;
 import jkind.translation.Node2Excel;
 import jkind.translation.Translate;
-import jkind.util.ExceptionUtil;
 import jkind.util.Util;
 
 public class JLustre2Excel {
@@ -20,7 +19,8 @@ public class JLustre2Excel {
 			String filename = args[0];
 
 			Program program = Main.parseLustre(filename);
-			StaticAnalyzer.check(program, SolverOption.Z3);
+			StaticAnalyzer staticAnalyzer = new StaticAnalyzer();
+			staticAnalyzer.check(program, SolverOption.Z3);
 			ensureUniqueEnumValues(program);
 			ensureNoFunctions(program);
 
@@ -29,8 +29,7 @@ public class JLustre2Excel {
 			new Node2Excel().convert(program.getMainNode(), outFilename);
 			System.out.println("Wrote " + outFilename);
 		} catch (Exception e) {
-			e.printStackTrace();
-			ExceptionUtil.error("语法错误:" + ExitCodes.UNCAUGHT_EXCEPTION);
+			throw new RuntimeException("JLustre2Excel error:" + e);
 		}
 	}
 
