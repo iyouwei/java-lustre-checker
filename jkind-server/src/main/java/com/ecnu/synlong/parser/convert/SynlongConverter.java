@@ -26,13 +26,13 @@ public class SynlongConverter {
             parser.removeErrorListeners();
             parser.addErrorListener(new SynlongErrorListener());
             parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
-            parser.setTrace(true);
+//            parser.setTrace(true);
             ParseTree tree = parser.program();
 
             SynlongToLustreContext context = new SynlongToLustreContext();
             SynlongToLustreVisitor visitor = new SynlongToLustreVisitor(context);
             String result = visitor.visit(tree);
-            log.info("Synlong转换Lustre结果：{}", result);
+            log.info("Synlong转换Lustre结果：\n{}", result);
             return result;
         } catch (Exception e) {
             log.error("Synlong转换Lustre失败: ", e);
