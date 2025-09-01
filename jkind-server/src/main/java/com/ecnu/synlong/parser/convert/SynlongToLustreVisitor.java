@@ -210,6 +210,22 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     }
 
     @Override
+    public String visitReturns_clause(SynlongParser.Returns_clauseContext ctx) {
+        // 修复返回子句：处理last关键字
+        StringBuilder sb = new StringBuilder("returns (");
+        if (ctx.params() != null) {
+            String params = visit(ctx.params());
+            // 移除外层的括号
+            if (params.startsWith("(") && params.endsWith(")")) {
+                params = params.substring(1, params.length() - 1);
+            }
+            sb.append(params);
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    @Override
     public String visitImportedOpDecl(SynlongParser.ImportedOpDeclContext ctx) {
         String kind = visit(ctx.op_kind());
         String name = ctx.ID().getText();
@@ -242,11 +258,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         }
         sb.append(")");
         return sb.toString();
-    }
-
-    @Override
-    public String visitReturns_clause(SynlongParser.Returns_clauseContext ctx) {
-        return "returns " + visit(ctx.params());
     }
 
     @Override
@@ -293,7 +304,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 sb.append(", ");
             }
         }
-        sb.append(" : ").append(visit(ctx.type_expr()));
+        String typeExpr = visit(ctx.type_expr());
+        // 处理analog、binary等类型
+        typeExpr = convertSynlongTypeToLustre(typeExpr);
+        sb.append(" : ").append(typeExpr);
         return sb.toString();
     }
 
@@ -368,7 +382,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitConstArray(SynlongParser.ConstArrayContext ctx) {
         List<String> items = new ArrayList<>();
         for (SynlongParser.Const_exprContext ce : ctx.const_list().const_expr()) {
-            items.add(visit(ce));
+            String item = visit(ce);
+            // 处理科学计数法
+            item = convertScientificNotation(item);
+            items.add(item);
         }
         return "[" + String.join(", ", items) + "]";
     }
@@ -418,7 +435,11 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitReturn_statement(SynlongParser.Return_statementContext ctx) {
-        return "returns " + visit(ctx.returns_var());
+        // 修复返回语句：从 "returns returns_var" 转换为正确的Lustre语法
+        if (ctx.returns_var() != null) {
+            return visit(ctx.returns_var());
+        }
+        return "";
     }
 
     @Override
@@ -505,7 +526,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         sb.append("var state : State;\n");
 
         // 3. 生成状态转移方程 - 修复转换逻辑
-        sb.append("state = if (pre(state) = null) then ").append(initialState).append("\n");
+        sb.append("state = if (pre(state) = ").append(initialState).append(") then ").append(initialState).append("\n");
         
         // unless转换优先
         for (StateInfo state : states) {
@@ -549,7 +570,11 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitTransition(SynlongParser.TransitionContext ctx) {
-        return visit(ctx.expr()) + " -> " + ctx.ID().getText();
+        // 修复转换表达式：从 "if expr resume/restart ID" 转换为 "expr"
+        String condition = visit(ctx.expr());
+        String action = ctx.getText().contains("resume") ? "resume" : "restart";
+        String target = ctx.ID().getText();
+        return condition + " " + action + " " + target;
     }
 
     // 处理原子表达式 - 修复数值转换
@@ -570,7 +595,8 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitFloat(SynlongParser.FloatContext ctx) {
-        return ctx.FLOAT().getText();
+        String value = ctx.FLOAT().getText();
+        return convertScientificNotation(value);
     }
 
     @Override
@@ -580,7 +606,8 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitReal(SynlongParser.RealContext ctx) {
-        return ctx.REAL().getText();
+        String value = ctx.REAL().getText();
+        return convertScientificNotation(value);
     }
 
     @Override
@@ -664,27 +691,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         return "not";
     }
 
-    // 处理Synlong特有的语法
-    @Override
-    public String visitMixedConstructor(SynlongParser.MixedConstructorContext ctx) {
-        // 处理 (make type)(value, status) 语法
-        if (ctx.getText().contains("make")) {
-            // 提取类型和值
-            String text = ctx.getText();
-            if (text.contains("(") && text.contains(")")) {
-                int start = text.indexOf("(");
-                int end = text.lastIndexOf(")");
-                if (start != -1 && end != -1) {
-                    String inner = text.substring(start + 1, end);
-                    String[] parts = inner.split(",");
-                    if (parts.length == 2) {
-                        return "{" + parts[0].trim() + ", " + parts[1].trim() + "}";
-                    }
-                }
-            }
-        }
-        return ctx.getText();
-    }
+
 
     // 处理数组访问和更新
     @Override
@@ -709,13 +716,91 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         StringBuilder sb = new StringBuilder();
         // SimpleApplyContext没有直接的ID方法，需要从prefix_operator获取
         if (ctx.prefix_operator() != null) {
-            sb.append(visit(ctx.prefix_operator()));
+            String prefixOp = visit(ctx.prefix_operator());
+            if (prefixOp == null) {
+                prefixOp = "";
+            }
+            // 处理 (make type) 语法
+            if (prefixOp.contains("make")) {
+                // 提取类型名
+                String typeName = prefixOp.replaceAll(".*make\\s+(\\w+).*", "$1");
+                sb.append("make_").append(typeName);
+            } else {
+                sb.append(prefixOp);
+            }
         }
         sb.append("(");
         if (ctx.list() != null) {
             sb.append(visit(ctx.list()));
         }
         sb.append(")");
+        return sb.toString();
+    }
+
+    @Override
+    public String visitMakeOp(SynlongParser.MakeOpContext ctx) {
+        // 处理 (make type) 语法，转换为 make_type 函数调用
+        String typeName = ctx.ID().getText();
+        return "make_" + typeName;
+    }
+
+    // 处理混合构造函数
+    @Override
+    public String visitMixedConstructor(SynlongParser.MixedConstructorContext ctx) {
+        // 处理 (make type)(value, status) 语法
+        if (ctx.getText().contains("make")) {
+            // 提取类型和值
+            String text = ctx.getText();
+            if (text.contains("(") && text.contains(")")) {
+                int start = text.indexOf("(");
+                int end = text.lastIndexOf(")");
+                if (start != -1 && end != -1) {
+                    String inner = text.substring(start + 1, end);
+                    String[] parts = inner.split(",");
+                    if (parts.length == 2) {
+                        return "{" + parts[0].trim() + ", " + parts[1].trim() + "}";
+                    }
+                }
+            }
+        }
+        return ctx.getText();
+    }
+
+    // 处理状态机体
+    @Override
+    public String visitStateBodyWithLocal(SynlongParser.StateBodyWithLocalContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        if (ctx.local_block() != null) {
+            sb.append(visit(ctx.local_block()));
+        }
+        if (ctx.let_block() != null) {
+            sb.append(visit(ctx.let_block()));
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String visitStateBodyLocalOnly(SynlongParser.StateBodyLocalOnlyContext ctx) {
+        return visit(ctx.local_block());
+    }
+
+    @Override
+    public String visitStateBodyLetOnly(SynlongParser.StateBodyLetOnlyContext ctx) {
+        return visit(ctx.let_block());
+    }
+
+    @Override
+    public String visitStateBodySingleEq(SynlongParser.StateBodySingleEqContext ctx) {
+        return visit(ctx.equation());
+    }
+
+    @Override
+    public String visitLet_block(SynlongParser.Let_blockContext ctx) {
+        StringBuilder sb = new StringBuilder("let\n");
+        for (SynlongParser.EquationContext eq : ctx.equation()) {
+            sb.append(visit(eq)).append(";\n");
+        }
+        sb.append("tel");
         return sb.toString();
     }
 }
