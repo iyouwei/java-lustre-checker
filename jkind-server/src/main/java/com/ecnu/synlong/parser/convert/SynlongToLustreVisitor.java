@@ -125,16 +125,17 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     // 转换Synlong类型到Lustre类型
     private String convertSynlongTypeToLustre(String typeExpr) {
         if (typeExpr == null) return typeExpr;
-        
-        // 处理analog类型
-        if (typeExpr.equals("analog")) {
-            return "struct {value: real; status: bool}";
-        }
-        
-        // 处理binary类型
-        if (typeExpr.equals("binary")) {
-            return "struct {value: bool; status: bool}";
-        }
+
+        // 已经有analog的type struct定义了
+//        // 处理analog类型
+//        if (typeExpr.equals("analog")) {
+//            return "struct {value: real; status: bool}";
+//        }
+//
+//        // 处理binary类型
+//        if (typeExpr.equals("binary")) {
+//            return "struct {value: bool; status: bool}";
+//        }
         
         // 处理数组类型，确保有初始值
         if (typeExpr.contains("^")) {
@@ -155,20 +156,20 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 // 将E转换为e，然后解析为double
                 String normalizedValue = value.replace("E", "e");
                 double doubleValue = Double.parseDouble(normalizedValue);
-                
-                // 对于极小的值，使用更精确的表示
-                if (Math.abs(doubleValue) < 1e-10) {
-                    return "0.0";
-                }
-                
-                // 对于极大的值，使用更合理的表示
-                if (Math.abs(doubleValue) > 1e10) {
-                    if (doubleValue > 0) {
-                        return "10000000000"; // 使用一个合理的上限值
-                    } else {
-                        return "-10000000000";
-                    }
-                }
+
+//                // 对于极小的值，使用更精确的表示
+//                if (Math.abs(doubleValue) < 1e-10) {
+//                    return "0.0";
+//                }
+//
+//                // 对于极大的值，使用更合理的表示
+//                if (Math.abs(doubleValue) > 1e10) {
+//                    if (doubleValue > 0) {
+//                        return "10000000000.0"; // 使用一个合理的上限值
+//                    } else {
+//                        return "-10000000000.0";
+//                    }
+//                }
                 
                 // 转换为字符串，避免科学计数法
                 return String.format("%.10f", doubleValue).replaceAll("0*$", "").replaceAll("\\.$", "");
@@ -197,11 +198,9 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         StringBuilder sb = new StringBuilder();
         sb.append(kind).append(" ").append(name)
           .append(params)
-          .append(" ").append(returns);
+          .append(" ").append(returns).append(";");
         if (ctx.op_body() != null) {
             sb.append(" ").append(visit(ctx.op_body()));
-        } else {
-            sb.append(";");
         }
         return sb.toString();
     }
