@@ -16,4 +16,9 @@ public class SyntaxError extends RecognitionException {
         this.errorMessage = errorMessage;
     }
 
+    public SyntaxError(String message) {
+        super(message, null, null, null);
+        this.errorMessage = message;
+    }
+
 }

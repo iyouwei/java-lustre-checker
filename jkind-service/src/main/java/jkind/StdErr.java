@@ -2,12 +2,17 @@ package jkind;
 
 import java.util.List;
 
+import com.sun.org.slf4j.internal.Logger;
+import com.sun.org.slf4j.internal.LoggerFactory;
 import jkind.analysis.ErrorCollector;
 import jkind.analysis.Level;
 import jkind.lustre.Location;
 import jkind.util.Util;
 
 public class StdErr {
+
+	private static final Logger log = LoggerFactory.getLogger(StdErr.class);
+
 	private static List<String> locationReference;
 
 	private final ErrorCollector collector = new ErrorCollector();
@@ -58,6 +63,11 @@ public class StdErr {
 	}
 
 	public static void showLocation(Location loc) {
+		if (locationReference == null) {
+			StdErr.warning("locationReference 为空");
+			StdErr.println(Util.spaces(loc.charPositionInLine) + "^");
+			return;
+		}
 		if (1 <= loc.line && loc.line <= locationReference.size()) {
 			String line = locationReference.get(loc.line - 1);
 			StdErr.println(line);
@@ -66,10 +76,10 @@ public class StdErr {
 	}
 
 	public static void println(String text) {
-		System.err.println(text);
+		log.error(text);
 	}
 
 	public static void printStackTrace(Throwable t) {
-		t.printStackTrace(System.err);
+		log.error("", t);
 	}
 }
