@@ -47,7 +47,7 @@ type_expr
     | 'real' # RealType
     | typevar # VarType
     | '{' field_decl (',' field_decl)* '}' # StructType
-    | type_expr '^' const_expr # ArrayType
+    | type_expr '^' INTEGER # ArrayType
     ;
 
 field_decl

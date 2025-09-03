@@ -788,9 +788,7 @@ public class SynlongParser extends Parser {
 		public Type_exprContext type_expr() {
 			return getRuleContext(Type_exprContext.class,0);
 		}
-		public Const_exprContext const_expr() {
-			return getRuleContext(Const_exprContext.class,0);
-		}
+		public TerminalNode INTEGER() { return getToken(SynlongParser.INTEGER, 0); }
 		public ArrayTypeContext(Type_exprContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -1061,7 +1059,7 @@ public class SynlongParser extends Parser {
 					setState(194);
 					match(T__19);
 					setState(195);
-					const_expr(0);
+					match(INTEGER);
 					}
 					} 
 				}
@@ -8330,7 +8328,7 @@ public class SynlongParser extends Parser {
 		"\u00b2\u0001\u0000\u0000\u0000\u00bf\u00b3\u0001\u0000\u0000\u0000\u00bf"+
 		"\u00b4\u0001\u0000\u0000\u0000\u00c0\u00c6\u0001\u0000\u0000\u0000\u00c1"+
 		"\u00c2\n\u0001\u0000\u0000\u00c2\u00c3\u0005\u0014\u0000\u0000\u00c3\u00c5"+
-		"\u0003\u0014\n\u0000\u00c4\u00c1\u0001\u0000\u0000\u0000\u00c5\u00c8\u0001"+
+		"\u0005x\u0000\u0000\u00c4\u00c1\u0001\u0000\u0000\u0000\u00c5\u00c8\u0001"+
 		"\u0000\u0000\u0000\u00c6\u00c4\u0001\u0000\u0000\u0000\u00c6\u00c7\u0001"+
 		"\u0000\u0000\u0000\u00c7\u000b\u0001\u0000\u0000\u0000\u00c8\u00c6\u0001"+
 		"\u0000\u0000\u0000\u00c9\u00ca\u0005v\u0000\u0000\u00ca\u00cb\u0005\u0015"+

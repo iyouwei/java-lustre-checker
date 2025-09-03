@@ -30,7 +30,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append("type ").append(typeDecl.ID().getText());
             if (typeDecl.type_def() != null) {
                 String typeDef = visit(typeDecl.type_def());
-                typeDef = convertSynlongTypeToLustre(typeDef);
                 sb.append(" = ").append(typeDef);
             }
             sb.append(";\n");
@@ -77,7 +76,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         List<String> fields = new ArrayList<>();
         for (SynlongParser.Field_declContext f : ctx.field_decl()) {
             String fieldType = visit(f.type_expr());
-            fieldType = convertSynlongTypeToLustre(fieldType);
             fields.add(f.ID().getText() + ": " + fieldType);
         }
         return "struct {" + String.join("; ", fields) + "}";
@@ -85,15 +83,9 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitArrayType(SynlongParser.ArrayTypeContext ctx) {
-        // 修复数组语法：从 type^size 改为 type[size]
+        // 从 type^size 改为 type[size]
         String typeExpr = visit(ctx.type_expr());
-        String sizeExpr = visit(ctx.const_expr());
-        
-        // 如果size表达式包含等号，只取等号前的部分
-        if (sizeExpr.contains("=")) {
-            sizeExpr = sizeExpr.substring(0, sizeExpr.indexOf("=")).trim();
-        }
-        
+        String sizeExpr = ctx.INTEGER().getText();
         return typeExpr + "[" + sizeExpr + "]";
     }
 
@@ -104,41 +96,15 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append("const ").append(constDecl.ID().getText());
             if (constDecl.type_expr() != null) {
                 String typeExpr = visit(constDecl.type_expr());
-                typeExpr = convertSynlongTypeToLustre(typeExpr);
                 sb.append(" : ").append(typeExpr);
             }
             if (constDecl.const_expr() != null) {
                 String constValue = visit(constDecl.const_expr());
-                // 处理科学计数法，转换为实际数值
                 sb.append(" = ").append(constValue);
             }
             sb.append(";\n");
         }
         return sb.toString();
-    }
-
-    // 转换Synlong类型到Lustre类型
-    private String convertSynlongTypeToLustre(String typeExpr) {
-        if (typeExpr == null) return typeExpr;
-
-        // 已经有analog的type struct定义了
-//        // 处理analog类型
-//        if (typeExpr.equals("analog")) {
-//            return "struct {value: real; status: bool}";
-//        }
-//
-//        // 处理binary类型
-//        if (typeExpr.equals("binary")) {
-//            return "struct {value: bool; status: bool}";
-//        }
-        
-        // 处理数组类型，确保有初始值
-        if (typeExpr.contains("^")) {
-            // 将 type^size 转换为 type[size]
-            return typeExpr.replace("^", "[");
-        }
-        
-        return typeExpr;
     }
 
     /**
@@ -273,7 +239,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             }
         }
         String typeExpr = visit(ctx.type_expr());
-        typeExpr = convertSynlongTypeToLustre(typeExpr);
         sb.append(" : ").append(typeExpr);
         return sb.toString();
     }
@@ -1216,7 +1181,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitField_decl(SynlongParser.Field_declContext ctx) {
         String fieldName = ctx.ID().getText();
         String fieldType = visit(ctx.type_expr());
-        fieldType = convertSynlongTypeToLustre(fieldType);
         return fieldName + ": " + fieldType;
     }
 
@@ -1231,7 +1195,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         sb.append(ctx.ID().getText());
         if (ctx.type_expr() != null) {
             String typeExpr = visit(ctx.type_expr());
-            typeExpr = convertSynlongTypeToLustre(typeExpr);
             sb.append(" : ").append(typeExpr);
         }
         if (ctx.const_expr() != null) {
@@ -1536,7 +1499,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         sb.append(ctx.ID().getText());
         if (ctx.type_def() != null) {
             String typeDef = visit(ctx.type_def());
-            typeDef = convertSynlongTypeToLustre(typeDef);
             sb.append(" = ").append(typeDef);
         }
         return sb.toString();

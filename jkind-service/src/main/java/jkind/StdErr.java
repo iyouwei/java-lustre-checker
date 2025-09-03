@@ -2,8 +2,8 @@ package jkind;
 
 import java.util.List;
 
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jkind.analysis.ErrorCollector;
 import jkind.analysis.Level;
 import jkind.lustre.Location;
@@ -15,10 +15,8 @@ public class StdErr {
 
 	private static List<String> locationReference;
 
-	private final ErrorCollector collector = new ErrorCollector();
-
-	public static void setLocationReference(List<String> locationReference) {
-		locationReference = locationReference;
+	public static void setLocationReference(List<String> reference) {
+		locationReference = reference;
 	}
 
 	public static void warning(String text) {
