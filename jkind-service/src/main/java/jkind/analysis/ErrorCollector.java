@@ -1,17 +1,22 @@
 package jkind.analysis;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 错误收集
  */
-@Getter
 public class ErrorCollector {
     private final List<String> errors = new ArrayList<>();
     private final List<String> warnings = new ArrayList<>();
+
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
 
     public void error(String msg) {
         errors.add(msg);

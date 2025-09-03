@@ -31,7 +31,10 @@ public class LustreController {
         // lustre模型, 包含约束条件
         String program = lustreFileParameter.getFile();
 
-        program = SynlongConverter.convert(program);
+        // 加个后门，用于测试
+        if (!program.contains("aiyowei")) {
+            program = SynlongConverter.convert(program);
+        }
 
         // 用program单独作为参数
         String[] args = new String[]{program};

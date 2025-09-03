@@ -282,17 +282,17 @@ public class Director extends MessageHandler {
 			boolean timeout = timeout();
 
 			if (engine_throwable) {
-				StdErr.println(engine.getName() + " process failed");
+				StdErr.error(engine.getName() + " process failed");
 				StdErr.printStackTrace(engine.getThrowable());
 				exitCode = ExitCodes.UNCAUGHT_EXCEPTION;
 				if (engine.getThrowable().toString().contains("IvcException")) {
 					exitCode = ExitCodes.IVC_EXCEPTION;
 				}
 				if (!no_minijkind) {
-					StdErr.println("failed during miniJKind run");
+					StdErr.error("failed during miniJKind run");
 				}
 				if (timeout) {
-					StdErr.println("timeout occurred");
+					StdErr.error("timeout occurred");
 				}
 			}
 		}

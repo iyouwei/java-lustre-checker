@@ -18,7 +18,7 @@ public class StdErr {
 	private final ErrorCollector collector = new ErrorCollector();
 
 	public static void setLocationReference(List<String> locationReference) {
-		StdErr.locationReference = locationReference;
+		locationReference = locationReference;
 	}
 
 	public static void warning(String text) {
@@ -49,13 +49,13 @@ public class StdErr {
 
 	public static void output(Level level, String text) {
 		if (level != Level.IGNORE) {
-			println(level + " " + text);
+			println(level, text);
 		}
 	}
 
 	public static void output(Level level, Location loc, String text) {
 		if (level != Level.IGNORE) {
-			println(level + " at line " + loc + " " + text);
+			println(level, level + " at line " + loc + " " + text);
 			if (level == Level.ERROR) {
 				showLocation(loc);
 			}
@@ -64,19 +64,24 @@ public class StdErr {
 
 	public static void showLocation(Location loc) {
 		if (locationReference == null) {
-			StdErr.warning("locationReference 为空");
-			StdErr.println(Util.spaces(loc.charPositionInLine) + "^");
+			warning( "locationReference 为空");
+			warning(Util.spaces(loc.charPositionInLine) + "^");
 			return;
 		}
 		if (1 <= loc.line && loc.line <= locationReference.size()) {
 			String line = locationReference.get(loc.line - 1);
-			StdErr.println(line);
-			StdErr.println(Util.spaces(loc.charPositionInLine) + "^");
+			error(line);
+			error(Util.spaces(loc.charPositionInLine) + "^");
 		}
 	}
 
-	public static void println(String text) {
-		log.error(text);
+	public static void println(Level level, String text) {
+		if (level == Level.ERROR) {
+			log.error(text);
+			throw new RuntimeException(text);
+		} else if (level == Level.WARNING) {
+			log.warn(text);
+		}
 	}
 
 	public static void printStackTrace(Throwable t) {

@@ -112,7 +112,7 @@ public class RealizabilityDirector {
 		for (RealizabilityEngine process : engines) {
 			if (process.getThrowable() != null) {
 				Throwable t = process.getThrowable();
-				StdErr.println(process.getName() + " process failed");
+				StdErr.error(process.getName() + " process failed");
 				StdErr.printStackTrace(t);
 				exitCode = ExitCodes.UNCAUGHT_EXCEPTION;
 			}

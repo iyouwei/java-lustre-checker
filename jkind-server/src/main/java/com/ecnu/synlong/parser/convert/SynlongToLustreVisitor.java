@@ -371,7 +371,11 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitSimpleExpr(SynlongParser.SimpleExprContext ctx) {
-        return visit(ctx.simple_expr());
+        // 调用内部的simple_expr()方法
+        if (ctx.simple_expr() != null) {
+            return visit(ctx.simple_expr());
+        }
+        return "";
     }
 
     @Override
@@ -1154,7 +1158,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitProperty(SynlongParser.PropertyContext ctx) {
-        return ctx.getText();
+        return "--%PROPERTY " + ctx.ID().getText();
     }
 
     @Override
@@ -1175,5 +1179,383 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitAssertion(SynlongParser.AssertionContext ctx) {
         return ctx.getText();
+    }
+
+    // ================== 添加缺失的类型转换方法 ==================
+    @Override
+    public String visitLongType(SynlongParser.LongTypeContext ctx) {
+        return "int"; // Lustre中long类型映射为int
+    }
+
+    @Override
+    public String visitULongType(SynlongParser.ULongTypeContext ctx) {
+        return "int"; // Lustre中无符号long类型映射为int
+    }
+
+    @Override
+    public String visitShortType(SynlongParser.ShortTypeContext ctx) {
+        return "int"; // Lustre中short类型映射为int
+    }
+
+    @Override
+    public String visitByteType(SynlongParser.ByteTypeContext ctx) {
+        return "int"; // Lustre中byte类型映射为int
+    }
+
+    @Override
+    public String visitUByteType(SynlongParser.UByteTypeContext ctx) {
+        return "int"; // Lustre中无符号byte类型映射为int
+    }
+
+    @Override
+    public String visitUIntType(SynlongParser.UIntTypeContext ctx) {
+        return "int"; // Lustre中无符号int类型映射为int
+    }
+
+    @Override
+    public String visitFloatType(SynlongParser.FloatTypeContext ctx) {
+        return "real"; // Lustre中float类型映射为real
+    }
+
+    @Override
+    public String visitCharType(SynlongParser.CharTypeContext ctx) {
+        return "int"; // Lustre中char类型映射为int
+    }
+
+    @Override
+    public String visitUShortType(SynlongParser.UShortTypeContext ctx) {
+        return "int"; // Lustre中无符号short类型映射为int
+    }
+
+    @Override
+    public String visitField_decl(SynlongParser.Field_declContext ctx) {
+        String fieldName = ctx.ID().getText();
+        String fieldType = visit(ctx.type_expr());
+        fieldType = convertSynlongTypeToLustre(fieldType);
+        return fieldName + ": " + fieldType;
+    }
+
+    @Override
+    public String visitTypevar(SynlongParser.TypevarContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitConst_decl(SynlongParser.Const_declContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ctx.ID().getText());
+        if (ctx.type_expr() != null) {
+            String typeExpr = visit(ctx.type_expr());
+            typeExpr = convertSynlongTypeToLustre(typeExpr);
+            sb.append(" : ").append(typeExpr);
+        }
+        if (ctx.const_expr() != null) {
+            String constValue = visit(ctx.const_expr());
+            constValue = convertScientificNotation(constValue);
+            sb.append(" = ").append(constValue);
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String visitConst_list(SynlongParser.Const_listContext ctx) {
+        if (ctx.const_expr().isEmpty()) {
+            return "";
+        }
+        List<String> items = new ArrayList<>();
+        for (SynlongParser.Const_exprContext ce : ctx.const_expr()) {
+            String item = visit(ce);
+            item = convertScientificNotation(item);
+            items.add(item);
+        }
+        return String.join(", ", items);
+    }
+
+    @Override
+    public String visitConst_label_expr(SynlongParser.Const_label_exprContext ctx) {
+        String label = ctx.ID().getText();
+        String value = visit(ctx.const_expr());
+        return label + ": " + value;
+    }
+
+    @Override
+    public String visitVar_id(SynlongParser.Var_idContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitWhen_decl(SynlongParser.When_declContext ctx) {
+        if (ctx.clock_expr() != null) {
+            return " when " + visit(ctx.clock_expr());
+        }
+        return "";
+    }
+
+    @Override
+    public String visitLast_decl(SynlongParser.Last_declContext ctx) {
+        if (ctx.const_expr() != null) {
+            return " last = " + visit(ctx.const_expr());
+        }
+        return "";
+    }
+
+    @Override
+    public String visitLhs_id(SynlongParser.Lhs_idContext ctx) {
+        return ctx.ID().getText();
+    }
+
+    @Override
+    public String visitState_decl(SynlongParser.State_declContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        if (ctx.getText().contains("initial")) {
+            sb.append("initial ");
+        }
+        if (ctx.getText().contains("final")) {
+            sb.append("final ");
+        }
+        sb.append("state ").append(ctx.ID().getText());
+        return sb.toString();
+    }
+
+    // ================== 添加缺失的表达式处理方法 ==================
+    @Override
+    public String visitStructExpr(SynlongParser.StructExprContext ctx) {
+        if (ctx.struct_expr() != null) {
+            return visit(ctx.struct_expr());
+        }
+        return "{}";
+    }
+
+    @Override
+    public String visitMixed_constructor(SynlongParser.Mixed_constructorContext ctx) {
+        // 处理 (type with .field = value) 语法
+        String typeName = ctx.ID().getText();
+        List<String> updates = new ArrayList<>();
+        for (SynlongParser.Label_or_indexContext loi : ctx.label_or_index()) {
+            String update = visit(loi);
+            if (update != null && !update.trim().isEmpty()) {
+                updates.add(update);
+            }
+        }
+        if (ctx.simple_expr() != null) {
+            String value = visit(ctx.simple_expr());
+            if (!updates.isEmpty()) {
+                return "(" + typeName + " with " + String.join(", ", updates) + " = " + value + ")";
+            }
+        }
+        return typeName;
+    }
+
+    @Override
+    public String visitLabel(SynlongParser.LabelContext ctx) {
+        return "." + ctx.ID().getText();
+    }
+
+    @Override
+    public String visitIndexItem(SynlongParser.IndexItemContext ctx) {
+        return visit(ctx.index());
+    }
+
+    @Override
+    public String visitIndex(SynlongParser.IndexContext ctx) {
+        if (ctx.simple_expr() != null) {
+            return "[" + visit(ctx.simple_expr()) + "]";
+        }
+        return "[]";
+    }
+
+    @Override
+    public String visitBool_expr(SynlongParser.Bool_exprContext ctx) {
+        if (ctx.list() != null) {
+            String list = visit(ctx.list());
+            return "#(" + list + ")";
+        }
+        return "#()";
+    }
+
+    // ================== 添加缺失的操作符处理方法 ==================
+    @Override
+    public String visitAdd(SynlongParser.AddContext ctx) {
+        return "+";
+    }
+
+    @Override
+    public String visitSub(SynlongParser.SubContext ctx) {
+        return "-";
+    }
+
+    @Override
+    public String visitMod(SynlongParser.ModContext ctx) {
+        return "mod";
+    }
+
+    @Override
+    public String visitDivInt(SynlongParser.DivIntContext ctx) {
+        return "div";
+    }
+
+    @Override
+    public String visitXor(SynlongParser.XorContext ctx) {
+        return "xor";
+    }
+
+    // ================== 添加缺失的迭代器应用方法 ==================
+    @Override
+    public String visitMapwApply(SynlongParser.MapwApplyContext ctx) {
+        String op = visit(ctx.prefix_operator());
+        String count = visit(ctx.const_expr());
+        String condition = visit(ctx.simple_expr());
+        String defaultList = visit(ctx.list(0));
+        String inputList = visit(ctx.list(1));
+        return "(mapw << " + op + "; " + count + " >> if " + condition + " default " + defaultList + ")(" + inputList + ")";
+    }
+
+    @Override
+    public String visitMapwiApply(SynlongParser.MapwiApplyContext ctx) {
+        String op = visit(ctx.prefix_operator());
+        String count = visit(ctx.const_expr());
+        String condition = visit(ctx.simple_expr());
+        String defaultList = visit(ctx.list(0));
+        String inputList = visit(ctx.list(1));
+        return "(mapwi << " + op + "; " + count + " >> if " + condition + " default " + defaultList + ")(" + inputList + ")";
+    }
+
+    // ================== 添加缺失的前缀操作符方法 ==================
+    @Override
+    public String visitPlusDollar(SynlongParser.PlusDollarContext ctx) {
+        return "+$";
+    }
+
+    @Override
+    public String visitMinusDollar(SynlongParser.MinusDollarContext ctx) {
+        return "-$";
+    }
+
+    @Override
+    public String visitNotDollar(SynlongParser.NotDollarContext ctx) {
+        return "not$";
+    }
+
+    @Override
+    public String visitShortDollar(SynlongParser.ShortDollarContext ctx) {
+        return "short$";
+    }
+
+    @Override
+    public String visitIntDollar(SynlongParser.IntDollarContext ctx) {
+        return "int$";
+    }
+
+    @Override
+    public String visitFloatDollar(SynlongParser.FloatDollarContext ctx) {
+        return "float$";
+    }
+
+    @Override
+    public String visitRealDollar(SynlongParser.RealDollarContext ctx) {
+        return "real$";
+    }
+
+    @Override
+    public String visitPlusOp(SynlongParser.PlusOpContext ctx) {
+        return "$+$";
+    }
+
+    @Override
+    public String visitMinusOp(SynlongParser.MinusOpContext ctx) {
+        return "$-$";
+    }
+
+    @Override
+    public String visitMulOp(SynlongParser.MulOpContext ctx) {
+        return "$*$";
+    }
+
+    @Override
+    public String visitDivOp(SynlongParser.DivOpContext ctx) {
+        return "$/$";
+    }
+
+    @Override
+    public String visitModOp(SynlongParser.ModOpContext ctx) {
+        return "$mod$";
+    }
+
+    @Override
+    public String visitDivIntOp(SynlongParser.DivIntOpContext ctx) {
+        return "$div$";
+    }
+
+    @Override
+    public String visitEqOp(SynlongParser.EqOpContext ctx) {
+        return "$=$";
+    }
+
+    @Override
+    public String visitNeOp(SynlongParser.NeOpContext ctx) {
+        return "$<>$";
+    }
+
+    @Override
+    public String visitLtOp(SynlongParser.LtOpContext ctx) {
+        return "$<$";
+    }
+
+    @Override
+    public String visitGtOp(SynlongParser.GtOpContext ctx) {
+        return "$>$";
+    }
+
+    @Override
+    public String visitLeOp(SynlongParser.LeOpContext ctx) {
+        return "$<=$";
+    }
+
+    @Override
+    public String visitGeOp(SynlongParser.GeOpContext ctx) {
+        return "$>=$";
+    }
+
+    @Override
+    public String visitAndOp(SynlongParser.AndOpContext ctx) {
+        return "$and$";
+    }
+
+    @Override
+    public String visitOrOp(SynlongParser.OrOpContext ctx) {
+        return "$or$";
+    }
+
+    @Override
+    public String visitXorOp(SynlongParser.XorOpContext ctx) {
+        return "$xor$";
+    }
+
+    // ================== 添加缺失的声明处理方法 ==================
+    @Override
+    public String visitTypeDeclaration(SynlongParser.TypeDeclarationContext ctx) {
+        return visit(ctx.type_block());
+    }
+
+    @Override
+    public String visitConstDeclaration(SynlongParser.ConstDeclarationContext ctx) {
+        return visit(ctx.const_block());
+    }
+
+    @Override
+    public String visitUserOpDeclaration(SynlongParser.UserOpDeclarationContext ctx) {
+        return visit(ctx.user_op_decl());
+    }
+
+    @Override
+    public String visitType_decl(SynlongParser.Type_declContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ctx.ID().getText());
+        if (ctx.type_def() != null) {
+            String typeDef = visit(ctx.type_def());
+            typeDef = convertSynlongTypeToLustre(typeDef);
+            sb.append(" = ").append(typeDef);
+        }
+        return sb.toString();
     }
 }

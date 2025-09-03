@@ -1,13 +1,15 @@
 package jkind.lustre.parsing;
 
-import lombok.Getter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 
-@Getter
 public class SyntaxError extends RecognitionException {
 
     private final String errorMessage;
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
 
     public SyntaxError(String message, RecognitionException e, String errorMessage) {
         super(message, e.getRecognizer(), e.getInputStream(), (ParserRuleContext) e.getCtx());

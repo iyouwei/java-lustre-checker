@@ -47,8 +47,8 @@ public class Main {
 	public static void main(String[] args) {
 		String availableEntryPoints = "Available entry points: -jkind, -jlustre2kind, -jlustre2excel, -jrealizability, -benchmark";
 		if (args.length == 0) {
-			StdErr.println("JKind Suite " + getVersion());
-			StdErr.println(availableEntryPoints);
+			StdErr.error("JKind Suite " + getVersion());
+			StdErr.error(availableEntryPoints);
 			throw new RuntimeException("语法错误");
 		}
 
@@ -78,7 +78,7 @@ public class Main {
 
 		default:
 			StdErr.error("unknown entry point: " + entryPoint);
-			StdErr.println(availableEntryPoints);
+			StdErr.error(availableEntryPoints);
 			throw new RuntimeException("语法错误:" + ExitCodes.UNKNOWN_ENTRY_POINT);
 		}
 	}

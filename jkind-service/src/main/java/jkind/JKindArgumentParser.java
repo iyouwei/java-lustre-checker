@@ -80,7 +80,7 @@ public class JKindArgumentParser extends ArgumentParser {
 	@Override
 	protected void parseCommandLine(CommandLine line) {
 		if (line.hasOption(VERSION)) {
-			StdErr.println(name + " " + Main.getVersion());
+			StdErr.error(name + " " + Main.getVersion());
 			printDectectedSolvers();
 			throw new RuntimeException("语法错误");
 		}
@@ -191,7 +191,7 @@ public class JKindArgumentParser extends ArgumentParser {
 		}
 
 		StdErr.error("unknown solver: " + solver);
-		StdErr.println("Valid options: " + options);
+		StdErr.error("Valid options: " + options);
 		throw new RuntimeException("语法错误:" + ExitCodes.INVALID_OPTIONS);
 	}
 
@@ -228,6 +228,6 @@ public class JKindArgumentParser extends ArgumentParser {
 
 	private void printDectectedSolvers() {
 		String detected = SolverUtil.availableSolvers().stream().map(Object::toString).collect(joining(", "));
-		StdErr.println("Detected solvers: " + detected);
+		StdErr.error("Detected solvers: " + detected);
 	}
 }
