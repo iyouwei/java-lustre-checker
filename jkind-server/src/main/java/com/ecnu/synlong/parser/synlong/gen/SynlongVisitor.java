@@ -1220,4 +1220,34 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitShort(SynlongParser.ShortContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#property}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitProperty(SynlongParser.PropertyContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#realizabilityInputs}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRealizabilityInputs(SynlongParser.RealizabilityInputsContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#ivc}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIvc(SynlongParser.IvcContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#main}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMain(SynlongParser.MainContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SynlongParser#assertion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssertion(SynlongParser.AssertionContext ctx);
 }

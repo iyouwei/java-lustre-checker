@@ -386,6 +386,19 @@ atom
     ;
 
 //=========================
+// Properties
+//=========================
+property: '--%PROPERTY' ID ';';
+
+realizabilityInputs: '--%REALIZABLE' (ID (',' ID)*)? ';';
+
+ivc: '--%IVC' (ID (',' ID)*)? ';';
+
+main: '--%MAIN' ';'?;
+
+assertion: 'assert' expr ';';
+
+//=========================
 // Lexer Rules
 //=========================
 // ★ 关键字优先，必须放在 ID 之前

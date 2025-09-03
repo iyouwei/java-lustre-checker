@@ -99,12 +99,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitConst_block(SynlongParser.Const_blockContext ctx) {
         StringBuilder sb = new StringBuilder();
         for (SynlongParser.Const_declContext constDecl : ctx.const_decl()) {
-            // 保留注释
-            String comment = extractComment(constDecl);
-            if (comment != null && !comment.trim().isEmpty()) {
-                sb.append(comment).append("\n");
-            }
-            
             sb.append("const ").append(constDecl.ID().getText());
             if (constDecl.type_expr() != null) {
                 String typeExpr = visit(constDecl.type_expr());
@@ -180,13 +174,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         }
         
         return value;
-    }
-
-    // 提取注释信息
-    private String extractComment(SynlongParser.Const_declContext ctx) {
-        // 这里需要根据实际的AST结构来提取注释
-        // 暂时返回空字符串，后续可以根据需要实现
-        return "";
     }
 
     @Override
@@ -1165,5 +1152,30 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitNotClock(SynlongParser.NotClockContext ctx) {
         return "not " + ctx.ID().getText();
+    }
+
+    @Override
+    public String visitProperty(SynlongParser.PropertyContext ctx) {
+        return ctx.getText();
+    }
+
+    @Override
+    public String visitRealizabilityInputs(SynlongParser.RealizabilityInputsContext ctx) {
+        return ctx.getText();
+    }
+
+    @Override
+    public String visitIvc(SynlongParser.IvcContext ctx) {
+        return ctx.getText();
+    }
+
+    @Override
+    public String visitMain(SynlongParser.MainContext ctx) {
+        return ctx.getText();
+    }
+
+    @Override
+    public String visitAssertion(SynlongParser.AssertionContext ctx) {
+        return ctx.getText();
     }
 }

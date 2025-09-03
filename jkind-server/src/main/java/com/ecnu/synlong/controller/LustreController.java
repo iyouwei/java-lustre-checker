@@ -31,10 +31,7 @@ public class LustreController {
         // lustre模型, 包含约束条件
         String program = lustreFileParameter.getFile();
 
-        // 判断是否为Synlong自动机代码
-        if (program != null && program.contains("automaton")) {
-            program = SynlongConverter.convert(program);
-        }
+        program = SynlongConverter.convert(program);
 
         // 用program单独作为参数
         String[] args = new String[]{program};

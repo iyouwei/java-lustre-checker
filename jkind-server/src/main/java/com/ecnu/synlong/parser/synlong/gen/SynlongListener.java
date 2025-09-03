@@ -2073,4 +2073,54 @@ public interface SynlongListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitShort(SynlongParser.ShortContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SynlongParser#property}.
+	 * @param ctx the parse tree
+	 */
+	void enterProperty(SynlongParser.PropertyContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SynlongParser#property}.
+	 * @param ctx the parse tree
+	 */
+	void exitProperty(SynlongParser.PropertyContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SynlongParser#realizabilityInputs}.
+	 * @param ctx the parse tree
+	 */
+	void enterRealizabilityInputs(SynlongParser.RealizabilityInputsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SynlongParser#realizabilityInputs}.
+	 * @param ctx the parse tree
+	 */
+	void exitRealizabilityInputs(SynlongParser.RealizabilityInputsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SynlongParser#ivc}.
+	 * @param ctx the parse tree
+	 */
+	void enterIvc(SynlongParser.IvcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SynlongParser#ivc}.
+	 * @param ctx the parse tree
+	 */
+	void exitIvc(SynlongParser.IvcContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SynlongParser#main}.
+	 * @param ctx the parse tree
+	 */
+	void enterMain(SynlongParser.MainContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SynlongParser#main}.
+	 * @param ctx the parse tree
+	 */
+	void exitMain(SynlongParser.MainContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SynlongParser#assertion}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssertion(SynlongParser.AssertionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SynlongParser#assertion}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssertion(SynlongParser.AssertionContext ctx);
 }
