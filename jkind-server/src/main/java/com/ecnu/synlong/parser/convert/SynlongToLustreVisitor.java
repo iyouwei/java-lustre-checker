@@ -140,9 +140,9 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         StringBuilder sb = new StringBuilder();
         sb.append(kind).append(" ").append(name)
           .append(params)
-          .append(" ").append(returns).append(";");
+          .append(" ").append(returns).append(";\n");
         if (ctx.op_body() != null) {
-            sb.append(" ").append(visit(ctx.op_body()));
+            sb.append(visit(ctx.op_body()));
         }
         return sb.toString();
     }
@@ -204,10 +204,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         if (ctx.local_block() != null) {
             sb.append(visit(ctx.local_block()));
         }
-        sb.append(visit(ctx.let_block())).append("\n");
-        if (ctx.getText().endsWith(";")) {
-            sb.append(";");
-        }
+        sb.append(visit(ctx.let_block()));
         return sb.toString();
     }
 
@@ -218,14 +215,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitLocal_block(SynlongParser.Local_blockContext ctx) {
-        StringBuilder sb = new StringBuilder("var ");
+        StringBuilder sb = new StringBuilder("var\n");
         for (int i = 0; i < ctx.var_decls().size(); i++) {
-            sb.append(visit(ctx.var_decls(i)));
-            if (i < ctx.var_decls().size() - 1) {
-                sb.append("; ");
-            }
+            sb.append("\t").append(visit(ctx.var_decls(i))).append(";\n");
         }
-        sb.append(";\n");
         return sb.toString();
     }
 
@@ -758,7 +751,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         for (ParseTree child : ctx.children) {
             String childString = visit(child);
             if (childString != null && !childString.trim().isEmpty()) {
-                sb.append(childString).append(";\n");
+                sb.append("\t").append(childString).append(";\n");
             }
         }
         sb.append("tel\n");
