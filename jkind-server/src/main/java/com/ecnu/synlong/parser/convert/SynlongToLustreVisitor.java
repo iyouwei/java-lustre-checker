@@ -4,6 +4,7 @@ import com.ecnu.synlong.parser.synlong.gen.SynlongBaseVisitor;
 import com.ecnu.synlong.parser.synlong.gen.SynlongParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
@@ -109,7 +110,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             if (constDecl.const_expr() != null) {
                 String constValue = visit(constDecl.const_expr());
                 // 处理科学计数法，转换为实际数值
-                constValue = convertScientificNotation(constValue);
                 sb.append(" = ").append(constValue);
             }
             sb.append(";\n");
@@ -144,30 +144,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     // 转换科学计数法：将科学计数法转换为实际数值
     private String convertScientificNotation(String value) {
         if (value == null) return value;
-        
         try {
-            // 处理科学计数法，如 8.5E-37, 3.3E+38
             if (value.contains("E") || value.contains("e")) {
-                // 将E转换为e，然后解析为double
-                String normalizedValue = value.replace("E", "e");
-                double doubleValue = Double.parseDouble(normalizedValue);
-
-//                // 对于极小的值，使用更精确的表示
-//                if (Math.abs(doubleValue) < 1e-10) {
-//                    return "0.0";
-//                }
-//
-//                // 对于极大的值，使用更合理的表示
-//                if (Math.abs(doubleValue) > 1e10) {
-//                    if (doubleValue > 0) {
-//                        return "10000000000.0"; // 使用一个合理的上限值
-//                    } else {
-//                        return "-10000000000.0";
-//                    }
-//                }
-                
-                // 转换为字符串，避免科学计数法
-                return String.format("%.10f", doubleValue).replaceAll("0*$", "").replaceAll("\\.$", "");
+                String plainValue = new BigDecimal(value).toPlainString();
+                // 没有小数点则需要补上.0
+                if (!plainValue.contains(".")) {
+                    plainValue =  plainValue + ".0";
+                }
+                return plainValue;
             }
         } catch (NumberFormatException e) {
             // 如果解析失败，返回原值
@@ -359,14 +343,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitConstArray(SynlongParser.ConstArrayContext ctx) {
-        List<String> items = new ArrayList<>();
-        for (SynlongParser.Const_exprContext ce : ctx.const_list().const_expr()) {
-            String item = visit(ce);
-            // 处理科学计数法
-            item = convertScientificNotation(item);
-            items.add(item);
-        }
-        return "[" + String.join(", ", items) + "]";
+        return "[" + visit(ctx.const_list()) + "]";
     }
 
     @Override
@@ -412,10 +389,12 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitReturn_statement(SynlongParser.Return_statementContext ctx) {
         // 修复返回语句：从 "returns returns_var" 转换为正确的Lustre语法
+        StringBuilder sb = new StringBuilder();
+        sb.append("returns ");
         if (ctx.returns_var() != null) {
-            return visit(ctx.returns_var());
+            sb.append(visit(ctx.returns_var()));
         }
-        return "";
+        return sb.toString();
     }
 
     @Override
@@ -1251,7 +1230,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         }
         if (ctx.const_expr() != null) {
             String constValue = visit(ctx.const_expr());
-            constValue = convertScientificNotation(constValue);
             sb.append(" = ").append(constValue);
         }
         return sb.toString();
@@ -1265,7 +1243,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         List<String> items = new ArrayList<>();
         for (SynlongParser.Const_exprContext ce : ctx.const_expr()) {
             String item = visit(ce);
-            item = convertScientificNotation(item);
             items.add(item);
         }
         return String.join(", ", items);
