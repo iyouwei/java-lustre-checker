@@ -141,14 +141,18 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         return typeExpr;
     }
 
-    // 转换科学计数法：将科学计数法转换为实际数值
-    private String convertScientificNotation(String value) {
+    /**
+     * 转换科学计数法：将科学计数法转换为实际数值
+     * @param value 字符串形式的数值
+     * @param isFloat 是否为浮点数类型
+     */
+    private String convertScientificNotation(String value, boolean isFloat) {
         if (value == null) return value;
         try {
             if (value.contains("E") || value.contains("e")) {
                 String plainValue = new BigDecimal(value).toPlainString();
                 // 没有小数点则需要补上.0
-                if (!plainValue.contains(".")) {
+                if (!plainValue.contains(".") && isFloat) {
                     plainValue =  plainValue + ".0";
                 }
                 return plainValue;
@@ -556,13 +560,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitInteger(SynlongParser.IntegerContext ctx) {
-        return ctx.INTEGER().getText();
+        String value = ctx.INTEGER().getText();
+        return convertScientificNotation(value, false);
     }
 
     @Override
     public String visitFloat(SynlongParser.FloatContext ctx) {
         String value = ctx.FLOAT().getText();
-        return convertScientificNotation(value);
+        return convertScientificNotation(value, true);
     }
 
     @Override
@@ -573,12 +578,13 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitReal(SynlongParser.RealContext ctx) {
         String value = ctx.REAL().getText();
-        return convertScientificNotation(value);
+        return convertScientificNotation(value, true);
     }
 
     @Override
     public String visitUInteger(SynlongParser.UIntegerContext ctx) {
-        return ctx.UINT().getText();
+        String value = ctx.UINT().getText();
+        return convertScientificNotation(value, true);
     }
 
     @Override
