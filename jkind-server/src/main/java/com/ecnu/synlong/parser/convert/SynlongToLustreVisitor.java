@@ -2,6 +2,7 @@ package com.ecnu.synlong.parser.convert;
 
 import com.ecnu.synlong.parser.synlong.gen.SynlongBaseVisitor;
 import com.ecnu.synlong.parser.synlong.gen.SynlongParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.*;
 
@@ -249,11 +250,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         if (ctx.local_block() != null) {
             sb.append(visit(ctx.local_block()));
         }
-        sb.append("let\n");
-        for (SynlongParser.EquationContext eq : ctx.equation()) {
-            sb.append(visit(eq)).append(";\n");
-        }
-        sb.append("tel");
+        sb.append(visit(ctx.let_block())).append("\n");
         if (ctx.getText().endsWith(";")) {
             sb.append(";");
         }
@@ -743,12 +740,12 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         return sb.toString();
     }
 
-    @Override
-    public String visitMakeOp(SynlongParser.MakeOpContext ctx) {
-        // 处理 (make type) 语法，转换为 make_type 函数调用
-        String typeName = ctx.ID().getText();
-        return "make_" + typeName;
-    }
+//    @Override
+//    public String visitMakeOp(SynlongParser.MakeOpContext ctx) {
+//        // 处理 (make type) 语法，转换为 make_type 函数调用
+//        String typeName = ctx.ID().getText();
+//        return "make_" + typeName;
+//    }
 
     // 处理混合构造函数
     @Override
@@ -803,13 +800,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitLet_block(SynlongParser.Let_blockContext ctx) {
         StringBuilder sb = new StringBuilder("let\n");
-        for (SynlongParser.EquationContext eq : ctx.equation()) {
-            String equation = visit(eq);
-            if (equation != null && !equation.trim().isEmpty()) {
-                sb.append(equation).append(";\n");
+        // 把子表达式的LET (equation | property | assertion | main | realizabilityInputs | ivc)* TEL都拼上
+        for (ParseTree child : ctx.children) {
+            String childString = visit(child);
+            if (childString != null && !childString.trim().isEmpty()) {
+                sb.append(childString).append(";\n");
             }
         }
-        sb.append("tel");
+        sb.append("tel\n");
         return sb.toString();
     }
 

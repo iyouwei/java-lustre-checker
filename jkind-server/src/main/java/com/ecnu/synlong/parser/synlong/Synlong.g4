@@ -111,7 +111,7 @@ returns_clause
 
 op_body
     : ';' # EmptyOpBody
-    | local_block? (LET (equation ';')+ TEL ';'?)? # FullOpBody
+    | local_block? (let_block ';'?)? # FullOpBody
     ;
 
 local_block
@@ -143,7 +143,7 @@ last_decl
 // Equations
 //=========================
 equation
-    : lhs '=' expr # Assignment
+    : lhs '=' expr ';' # Assignment
     | state_machine return_statement # StateMachineReturn
     ;
 
@@ -157,7 +157,7 @@ lhs_id
     ;
 
 return_statement
-    : RETURNS returns_var
+    : RETURNS returns_var ';'
     ;
 
 returns_var
@@ -183,11 +183,11 @@ state_body
     : local_block let_block # StateBodyWithLocal
     | local_block # StateBodyLocalOnly
     | let_block # StateBodyLetOnly
-    | equation ';' # StateBodySingleEq
+    | equation # StateBodySingleEq
     ;
 
 let_block
-    : LET (equation ';')* TEL
+    : LET (equation | property | assertion | main | realizabilityInputs | ivc)* TEL
     ;
 
 transition
