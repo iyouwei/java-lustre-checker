@@ -7,6 +7,13 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
 public class SynlongConverter {
     /**
@@ -32,7 +39,16 @@ public class SynlongConverter {
             SynlongToLustreContext context = new SynlongToLustreContext();
             SynlongToLustreVisitor visitor = new SynlongToLustreVisitor(context);
             String result = visitor.visit(tree);
-            log.info("Synlong转换Lustre结果：\n{}", result);
+//            log.info("Synlong转换Lustre结果：\n{}", result);
+
+            // 输出result到result.txt文件
+            try {
+                Path out = Paths.get("reference/result.txt");
+                Files.write(out, result.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (IOException e) {
+                log.warn("写入 result.txt 失败: {}", e.getMessage());
+            }
+
             return result;
         } catch (Exception e) {
             log.error("Synlong转换Lustre失败: ", e);

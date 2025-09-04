@@ -1,0 +1,261 @@
+const
+--代表逻辑 1 
+VALUE_1:bool =true;
+--代表逻辑0
+VALUE_0:bool = false;
+--代表第3个输入
+THIRD_INPUT:int =3;
+--系统时间
+Ta:real = 30.000;
+--代表第6个输入
+SIXTH_INPUT:int =6;
+--代表第7输入
+SEVENTH_INPUT:int =7;
+--代表第2个输入
+SECOND_INPUT:int = 2;
+--代表没有输入
+NO_INPUT:int =0;
+--0代表没有错误
+NO_FAULT:bool = false;
+--通道没有保护动作
+NO_ACTION:bool = false;
+MINFLOAT:real = 8.5E-37;
+MAXFLOAT:real = 3.3E+38;
+--代表第四输入
+FOURTH_INPUT:int = 4;
+--代表第一输入
+FIRST_INPUT:int =1;
+--代表第五输入
+FIFTH_INPUT:int = 5;
+--1表示有错误
+FAULT:bool = true;
+--通道执行保护动作
+ACTION:bool = true;
+--代表PWS块中的Ni
+Ni:real^10 = [0.14,-0.84,-3.75,3.38,-0.95,0.15,-0.01,8.12E-04,-6.07E-04,-0.018];
+
+Ji:int^10 = [-2,-1,0,1,2,3,4,5,-9,-7];
+
+Ii:int^10= [0,0,0,1,1,1,2,2,2,3];
+--PWS的精度保护
+EPSILON1 :real = 0.00001;
+
+type
+
+VOTE3 = {
+    I1:binary,
+    I2:binary,
+    I3:binary
+};
+
+VOTE2 = {
+    I1:binary,
+    I2:binary
+};
+
+--最大值选取结果
+VM3Value = {
+    output1:analog,
+    output2:binary,
+    output3:binary
+};
+
+--一致性校对结果
+states = {
+    okNumber:int,
+    input1:analog,
+    input2:analog
+};
+
+
+--带质量为的int类型数据，主要用于部分系统变量（当前工作模式、当前平台配置模式，当前系统是否允许输出）的定义
+mulriple = {
+    value:int,
+    status:bool
+};
+ladder = {
+    analog : analog,
+    input_num : int
+};
+--包含DOR所有输出的结构体
+DOR = {
+    O1 :binary,
+    O2 : binary
+};
+
+--开关量
+binary = {
+    value :bool,
+    status :bool
+};
+
+AVE4uniformity = {
+    I1 :bool,
+    I2:bool,
+    I3:bool,
+    I4:bool
+};
+
+--AVE4中选取的质量位好的数据
+AVE4States = {
+    okNumber :int,
+    I1:analog,
+    I2:analog,
+    I3:analog
+};
+
+--模拟量
+analog = {
+    value :real,
+    status :bool
+};
+
+-- function imported  ExpR_MathLib(input1:real) returns (Output1:real);
+
+node FIT(
+    I1:binary;
+    I2:analog;
+    G:real;
+    T1:real)
+    returns( O1:analog last = {value:0.0,status:false})
+let 
+    automaton SM1
+        initial state Init 
+        unless
+            if NO_FAULT = I2.status  
+                restart NO_FAULT_STATE;
+            if FAULT = I2.status  
+                restart FAULT_STATE;
+        var 
+            _L2 :analog;
+            _L3 :real;
+            _L4:bool;
+
+        let
+            O1= _L2;
+            _L2 = (make analog)(_L3,_L4);
+            _L3 = 0.0;
+            _L4 = NO_FAULT;
+        tel
+    state NO_FAULT_STATE
+    unless
+        if VALUE_1 = I1.value and NO_FAULT = I1.status
+            restart Rapid;
+        if FAULT = I2.status
+            restart FAULT_STATE;
+    var 
+        _L18:real;
+        _L12:real;
+        _L10:real;
+        _L8:analog;
+        _L5:real;
+        _L4:real;
+        _L2:real;
+        _L1:real;
+        _L40:analog;
+        _L42:binary;
+        _L43:bool;
+        _L44:bool;
+        _L45:bool;
+        _L46:bool;
+        _L47:bool;
+        _L48:bool;
+        _L52:analog;
+        _L53:real;
+        _L54:real;
+        _L55:real;
+        _L56:real;
+        _L58:real;
+
+    let
+        _L1 = _L2 / _L5;
+        _L2 = Ta;
+        _L4 = G;
+        _L5 = T1;
+        _L8 = I2;
+        _L10 = - _L1;
+        _L12 = _L8.value;
+        _L18 = _L4 *_L12;
+        O1 = _L40;
+        _L40 = (make analog) (_L55,_L46);
+        _L42 = I1;
+        _L43 = _L42.status;
+        _L44 = _L45 = _L43;
+        _L45 = NO_FAULT;
+        _L46 = if _L44 then _L47 else _L48;
+        _L47 = NO_FAULT;
+        _L48 = FAULT;
+        _L52 = last 'O1;
+        _L53 = _L56 - _L18;
+        _L54 = _L53 * _L58;
+        _L55 = _L18 + _L54;
+        _L56 = _L52.value;
+
+        _L58 =ExpR_MathLib(_L10);
+    tel
+
+    state FAULT_STATE
+    unless if NO_FAULT = I2.status restart Rapid;
+    var 
+        _L22 :real;
+        _L21:real;
+        _L20:real;
+        _L19:analog;
+        _L18:bool;
+        _L11:analog;
+        _L10:real;
+        _L8:real;
+        _L7:real;
+        _L6:analog;
+        _L4:real;
+        _L3:real;
+        _L2:real;
+        _L23:real;
+        _L24:real;
+        _L25:real;
+
+
+    let
+        _L22 = _L10  + _L21;
+        _L21 = _L20 *_L25;
+        _L20 = _L23 - _L10;
+        _L19 =  last 'O1;
+        _L18 = FAULT;
+        _L11 = (make analog) (_L22, _L18);
+        O1 = _L11;
+        _L10 = _L4 *_L8;
+        _L8 = _L6.value;
+        _L7 = - _L2;
+        _L6 = I2;
+        _L4 = G;
+        _L3 = Ta;
+        _L2 = _L3/_L24;
+        _L23 = _L19.value;
+        _L24 = T1;
+        _L5 = ExpR_MathLib(_L7);
+    tel
+    state Rapid 
+    unless 
+        if VALUE_0 = I1.value or FAULT = I1.status  
+            restart NO_FAULT_STATE;
+        if FAULT = I2.status 
+            restart FAULT_STATE;
+
+    var 
+        _L4 :analog;
+        _L3 :real;
+        _L2 :real;
+        _L1:real;
+        _L5:analog;
+        _L6:bool;
+    let 
+        _L1 = _L3 * _L2;
+        _L2 = _L4.value;
+        _L3 = G;
+        _L4 = I2;
+        O1 = _L5;
+        _L5  = (make analog)(_L1,_L6);
+        _L6 = NO_FAULT;
+    tel
+    returns O1;
+tel 
