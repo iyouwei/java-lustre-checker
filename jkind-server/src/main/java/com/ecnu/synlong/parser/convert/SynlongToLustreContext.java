@@ -29,6 +29,7 @@ public class SynlongToLustreContext {
     
     // 新增：结构体构造函数收集
     private final Set<String> structTypes = new HashSet<>(); // 需要生成构造函数的结构体类型
+    private final Map<String, Map<String, String>> structFields = new HashMap<>(); // 结构体名 -> (字段名 -> 字段类型)
 
     public void addState(String synlongState, String lustreState) {
         stateNameMap.put(synlongState, lustreState);
@@ -186,15 +187,15 @@ public class SynlongToLustreContext {
     
     // 生成状态机局部变量定义（只包含状态机相关变量，不包含状态变量本身）
     public String generateStateMachineLocalVars() {
-        Map<String, String> allVarTypes = getAllStateVarTypes();
+        Map<String, String> uniqueVars = getUniqueStateVars();
         
-        if (allVarTypes.isEmpty()) {
+        if (uniqueVars.isEmpty()) {
             return "";
         }
         
         StringBuilder sb = new StringBuilder();
         // 只生成状态局部变量，状态变量本身由调用方处理
-        for (Map.Entry<String, String> entry : allVarTypes.entrySet()) {
+        for (Map.Entry<String, String> entry : uniqueVars.entrySet()) {
             String varName = entry.getKey();
             String varType = entry.getValue();
             sb.append("\t").append(varName).append(" : ").append(varType).append(";\n");
@@ -202,42 +203,156 @@ public class SynlongToLustreContext {
         return sb.toString();
     }
     
-    // 检查是否有状态机变量需要声明
-    public boolean hasStateMachineVars() {
-        return !allStates.isEmpty() || !getAllStateVarTypes().isEmpty();
-    }
-    
-    // 生成状态机条件赋值
-    public String generateStateMachineConditionalAssignments() {
-        StringBuilder sb = new StringBuilder();
+    // 获取唯一的状态变量（处理重复定义）
+    private Map<String, String> getUniqueStateVars() {
+        Map<String, String> uniqueVars = new HashMap<>();
+        Map<String, List<String>> varNameToStates = new HashMap<>(); // 变量名 -> 定义它的状态列表
+        Map<String, Set<String>> varNameToTypes = new HashMap<>(); // 变量名 -> 类型集合
         
-        for (String stateName : allStates) {
-            List<String> assignments = getStateAssignments(stateName);
-            if (!assignments.isEmpty()) {
-                sb.append("-- State ").append(stateName).append(" assignments\n");
-                for (String assignment : assignments) {
-                    // 将原本的 "if (state = S) then <assignment>" 形式改为 "<prefixed_lhs> = if (state = S) then <prefixed_rhs>"
-                    int eq = assignment.indexOf('=');
-                    if (eq > 0) {
-                        String originalLhs = assignment.substring(0, eq).trim();
-                        String originalRhs = assignment.substring(eq + 1).trim();
-                        
-                        // 只有状态局部变量才加前缀，全局变量不加前缀
-                        String correctLhs = getCorrectVarName(stateName, originalLhs);
-                        
-                        // 处理rhs中可能包含的状态变量引用，也需要加前缀
-                        String processedRhs = processRhsVariableReferences(stateName, originalRhs);
-                        
-                        sb.append(correctLhs).append(" = if (state = ").append(stateName).append(") then ").append(processedRhs).append(" else pre(").append(correctLhs).append(");\n");
-                    } else {
-                        // 无法解析则回退到原来的包裹形式
-                        sb.append("if (state = ").append(stateName).append(") then ").append(assignment).append("\n");
+        // 收集所有变量名及其对应的状态和类型
+        for (Map.Entry<String, Map<String, String>> stateEntry : stateVarTypes.entrySet()) {
+            String stateName = stateEntry.getKey();
+            Map<String, String> stateVars = stateEntry.getValue();
+            
+            for (Map.Entry<String, String> varEntry : stateVars.entrySet()) {
+                String originalVarName = varEntry.getKey();
+                String varType = varEntry.getValue();
+                
+                varNameToStates.computeIfAbsent(originalVarName, k -> new ArrayList<>()).add(stateName);
+                varNameToTypes.computeIfAbsent(originalVarName, k -> new HashSet<>()).add(varType);
+            }
+        }
+        
+        // 处理每个变量
+        for (Map.Entry<String, List<String>> entry : varNameToStates.entrySet()) {
+            String originalVarName = entry.getKey();
+            List<String> states = entry.getValue();
+            Set<String> types = varNameToTypes.get(originalVarName);
+            
+            if (states.size() == 1) {
+                // 只在一个状态中定义，使用前缀名
+                String stateName = states.get(0);
+                String prefixedName = getPrefixedVarName(stateName, originalVarName);
+                String varType = types.iterator().next();
+                uniqueVars.put(prefixedName, varType);
+            } else {
+                // 在多个状态中定义，需要合并
+                if (types.size() == 1) {
+                    // 类型相同，使用原变量名
+                    String varType = types.iterator().next();
+                    uniqueVars.put(originalVarName, varType);
+                } else {
+                    // 类型不同，仍使用前缀名（避免类型冲突）
+                    for (String stateName : states) {
+                        String prefixedName = getPrefixedVarName(stateName, originalVarName);
+                        String varType = stateVarTypes.get(stateName).get(originalVarName);
+                        uniqueVars.put(prefixedName, varType);
                     }
                 }
             }
         }
         
+        return uniqueVars;
+    }
+    
+    // 检查是否有状态机变量需要声明
+    public boolean hasStateMachineVars() {
+        return !allStates.isEmpty() || !getAllStateVarTypes().isEmpty();
+    }
+    
+    // 生成状态机条件赋值（处理重复变量合并）
+    public String generateStateMachineConditionalAssignments() {
+        StringBuilder sb = new StringBuilder();
+        Map<String, List<StateAssignment>> varAssignments = groupAssignmentsByVariable();
+        
+        for (Map.Entry<String, List<StateAssignment>> entry : varAssignments.entrySet()) {
+            String varName = entry.getKey();
+            List<StateAssignment> assignments = entry.getValue();
+            
+            if (assignments.size() == 1) {
+                // 单个状态的赋值
+                StateAssignment assignment = assignments.get(0);
+                sb.append("-- Variable ").append(varName).append(" assignment\n");
+                sb.append(varName).append(" = if (state = ").append(assignment.stateName)
+                  .append(") then ").append(assignment.rhs)
+                  .append(" else pre(").append(varName).append(");\n");
+            } else {
+                // 多个状态的赋值，生成if-else链
+                sb.append("-- Variable ").append(varName).append(" assignments (merged)\n");
+                sb.append(varName).append(" = ");
+                
+                for (int i = 0; i < assignments.size(); i++) {
+                    StateAssignment assignment = assignments.get(i);
+                    if (i == 0) {
+                        sb.append("if (state = ").append(assignment.stateName).append(") then ").append(assignment.rhs);
+                    } else {
+                        sb.append(" else if (state = ").append(assignment.stateName).append(") then ").append(assignment.rhs);
+                    }
+                }
+                sb.append(" else pre(").append(varName).append(");\n");
+            }
+        }
+        
         return sb.toString();
+    }
+    
+    // 按变量分组赋值语句
+    private Map<String, List<StateAssignment>> groupAssignmentsByVariable() {
+        Map<String, List<StateAssignment>> grouped = new HashMap<>();
+        
+        for (String stateName : allStates) {
+            List<String> assignments = getStateAssignments(stateName);
+            for (String assignment : assignments) {
+                int eq = assignment.indexOf('=');
+                if (eq > 0) {
+                    String originalLhs = assignment.substring(0, eq).trim();
+                    String originalRhs = assignment.substring(eq + 1).trim();
+                    
+                    // 确定最终的变量名
+                    String finalVarName;
+                    if (isVariableSharedAcrossStates(originalLhs)) {
+                        finalVarName = originalLhs; // 共享变量使用原名
+                    } else {
+                        finalVarName = getPrefixedVarName(stateName, originalLhs); // 单独变量使用前缀名
+                    }
+                    
+                    // 处理右侧表达式中的变量引用
+                    String processedRhs = processRhsVariableReferences(stateName, originalRhs);
+                    
+                    StateAssignment stateAssignment = new StateAssignment(stateName, processedRhs);
+                    grouped.computeIfAbsent(finalVarName, k -> new ArrayList<>()).add(stateAssignment);
+                }
+            }
+        }
+        
+        return grouped;
+    }
+    
+    // 检查变量是否在多个状态间共享（同名且同类型）
+    private boolean isVariableSharedAcrossStates(String varName) {
+        int stateCount = 0;
+        Set<String> types = new HashSet<>();
+        
+        for (Map.Entry<String, Map<String, String>> stateEntry : stateVarTypes.entrySet()) {
+            Map<String, String> stateVars = stateEntry.getValue();
+            if (stateVars.containsKey(varName)) {
+                stateCount++;
+                types.add(stateVars.get(varName));
+            }
+        }
+        
+        return stateCount > 1 && types.size() == 1; // 多个状态且类型相同
+    }
+    
+    // 内部类：状态赋值
+    private static class StateAssignment {
+        final String stateName;
+        final String rhs;
+        
+        StateAssignment(String stateName, String rhs) {
+            this.stateName = stateName;
+            this.rhs = rhs;
+        }
     }
     
     // 处理右侧表达式中的变量引用，为状态变量添加前缀
@@ -272,15 +387,51 @@ public class SynlongToLustreContext {
         return Collections.unmodifiableSet(structTypes);
     }
     
+    // 添加结构体字段信息
+    public void addStructField(String structName, String fieldName, String fieldType) {
+        structFields.computeIfAbsent(structName, k -> new HashMap<>()).put(fieldName, fieldType);
+    }
+    
+    // 获取结构体字段信息
+    public Map<String, String> getStructFields(String structName) {
+        return structFields.getOrDefault(structName, Collections.emptyMap());
+    }
+    
     // 生成结构体构造函数
     public String generateStructConstructors() {
         StringBuilder sb = new StringBuilder();
         
         for (String typeName : structTypes) {
-            sb.append("function make_").append(typeName).append("(value, status) returns (result : ").append(typeName).append(");\n");
-            sb.append("let\n");
-            sb.append("\tresult = {value = value; status = status};\n");
-            sb.append("tel;\n\n");
+            Map<String, String> fields = getStructFields(typeName);
+            
+            if (fields.isEmpty()) {
+                // 如果没有字段信息，使用默认的value和status
+                sb.append("function make_").append(typeName).append("(value : int; status : bool) returns (result : ").append(typeName).append(");\n");
+                sb.append("let\n");
+                sb.append("\tresult = {value = value; status = status};\n");
+                sb.append("tel;\n\n");
+            } else {
+                // 根据实际字段生成参数和返回值
+                List<String> paramList = new ArrayList<>();
+                List<String> assignList = new ArrayList<>();
+                
+                for (Map.Entry<String, String> field : fields.entrySet()) {
+                    String fieldName = field.getKey();
+                    String fieldType = field.getValue();
+                    paramList.add(fieldName + " : " + fieldType);
+                    assignList.add(fieldName + " = " + fieldName);
+                }
+                
+                // 生成函数签名
+                sb.append("function make_").append(typeName).append("(")
+                  .append(String.join("; ", paramList))
+                  .append(") returns (result : ").append(typeName).append(");\n");
+                
+                // 生成函数体
+                sb.append("let\n");
+                sb.append("\tresult = {").append(String.join("; ", assignList)).append("};\n");
+                sb.append("tel;\n\n");
+            }
         }
         
         return sb.toString();

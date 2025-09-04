@@ -274,10 +274,20 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitType_block(SynlongParser.Type_blockContext ctx) {
         StringBuilder sb = new StringBuilder();
         for (SynlongParser.Type_declContext typeDecl : ctx.type_decl()) {
-            String typeDefStr = "type " + typeDecl.ID().getText();
+            String typeName = typeDecl.ID().getText();
+            String typeDefStr = "type " + typeName;
             if (typeDecl.type_def() != null) {
                 String typeDef = visit(typeDecl.type_def());
                 typeDefStr += " = " + typeDef;
+                
+                // 如果是结构体类型，收集字段信息
+                if (typeDecl.type_def() instanceof SynlongParser.TypeExprDefContext) {
+                    SynlongParser.TypeExprDefContext typeExprDef = (SynlongParser.TypeExprDefContext) typeDecl.type_def();
+                    if (typeExprDef.type_expr() instanceof SynlongParser.StructTypeContext) {
+                        SynlongParser.StructTypeContext structType = (SynlongParser.StructTypeContext) typeExprDef.type_expr();
+                        collectStructFields(typeName, structType);
+                    }
+                }
             }
             typeDefStr += ";";
             
@@ -286,6 +296,15 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append(typeDefStr).append("\n");
         }
         return sb.toString();
+    }
+    
+    // 收集结构体字段信息
+    private void collectStructFields(String structName, SynlongParser.StructTypeContext structType) {
+        for (SynlongParser.Field_declContext field : structType.field_decl()) {
+            String fieldName = field.ID().getText();
+            String fieldType = visit(field.type_expr());
+            context.addStructField(structName, fieldName, fieldType);
+        }
     }
 
     @Override
