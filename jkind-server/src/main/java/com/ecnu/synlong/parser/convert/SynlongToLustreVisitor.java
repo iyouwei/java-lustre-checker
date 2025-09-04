@@ -16,9 +16,250 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitProgram(SynlongParser.ProgramContext ctx) {
-        StringBuilder sb = new StringBuilder();
+        // 第一阶段：收集所有状态机信息
+        collectStateMachineInfo(ctx);
+        
+        // 第二阶段：生成完整的Lustre代码
+        return generateLustreCode(ctx);
+    }
+    
+    /**
+     * 第一阶段：收集状态机信息
+     */
+    private void collectStateMachineInfo(SynlongParser.ProgramContext ctx) {
         for (SynlongParser.DeclsContext decl : ctx.decls()) {
-            sb.append(visit(decl)).append("\n");
+            if (decl instanceof SynlongParser.UserOpDeclarationContext) {
+                SynlongParser.UserOpDeclarationContext userOpDecl = (SynlongParser.UserOpDeclarationContext) decl;
+                collectStateMachineFromUserOp(userOpDecl.user_op_decl());
+            }
+        }
+    }
+    
+    /**
+     * 从用户操作声明中收集状态机信息
+     */
+    private void collectStateMachineFromUserOp(SynlongParser.User_op_declContext ctx) {
+        if (ctx instanceof SynlongParser.UserOpDeclContext) {
+            SynlongParser.UserOpDeclContext userOpCtx = (SynlongParser.UserOpDeclContext) ctx;
+            if (userOpCtx.op_body() instanceof SynlongParser.FullOpBodyContext) {
+                SynlongParser.FullOpBodyContext fullBody = (SynlongParser.FullOpBodyContext) userOpCtx.op_body();
+                if (fullBody.let_block() != null) {
+                    collectStateMachineFromLetBlock(fullBody.let_block());
+                }
+            }
+        }
+    }
+    
+    /**
+     * 从let块中收集状态机信息
+     */
+    private void collectStateMachineFromLetBlock(SynlongParser.Let_blockContext ctx) {
+        for (ParseTree child : ctx.children) {
+            if (child instanceof SynlongParser.StateMachineReturnContext) {
+                SynlongParser.StateMachineReturnContext eq = (SynlongParser.StateMachineReturnContext) child;
+                collectStateMachineInfo(eq.state_machine());
+            }
+        }
+    }
+    
+    /**
+     * 收集状态机信息
+     */
+    private void collectStateMachineInfo(SynlongParser.State_machineContext ctx) {
+        for (SynlongParser.State_declContext stateDecl : ctx.state_decl()) {
+            String stateName = stateDecl.ID().getText();
+            context.addStateToEnum(stateName);
+            
+            // 检查是否为初始状态或最终状态
+            boolean isInitial = stateDecl.getText().contains("initial");
+            boolean isFinal = stateDecl.getText().contains("final");
+            
+            if (isInitial) {
+                context.setInitialState(stateName);
+            }
+            if (isFinal) {
+                context.addFinalState(stateName);
+            }
+            
+            // 收集状态体中的局部变量和内容
+            if (stateDecl.state_body() != null) {
+                collectStateBodyVars(stateName, stateDecl.state_body());
+                collectStateBodyContent(stateName, stateDecl.state_body());
+            }
+            
+            // 收集转换信息
+            collectStateTransitions(stateName, stateDecl);
+        }
+    }
+    
+    /**
+     * 收集状态体中的局部变量
+     */
+    private void collectStateBodyVars(String stateName, SynlongParser.State_bodyContext stateBody) {
+        if (stateBody instanceof SynlongParser.StateBodyWithLocalContext) {
+            SynlongParser.StateBodyWithLocalContext localCtx = (SynlongParser.StateBodyWithLocalContext) stateBody;
+            for (SynlongParser.Var_declsContext varDecls : localCtx.local_block().var_decls()) {
+                String varType = visit(varDecls.type_expr());
+                for (SynlongParser.Var_idContext varId : varDecls.var_id()) {
+                    String varName = varId.getText();
+                    context.addStateLocalVar(stateName, varName);
+                    context.addStateVarType(stateName, varName, varType);
+                }
+            }
+        } else if (stateBody instanceof SynlongParser.StateBodyLocalOnlyContext) {
+            SynlongParser.StateBodyLocalOnlyContext localCtx = (SynlongParser.StateBodyLocalOnlyContext) stateBody;
+            for (SynlongParser.Var_declsContext varDecls : localCtx.local_block().var_decls()) {
+                String varType = visit(varDecls.type_expr());
+                for (SynlongParser.Var_idContext varId : varDecls.var_id()) {
+                    String varName = varId.getText();
+                    context.addStateLocalVar(stateName, varName);
+                    context.addStateVarType(stateName, varName, varType);
+                }
+            }
+        }
+    }
+    
+    /**
+     * 收集状态体内容
+     */
+    private void collectStateBodyContent(String stateName, SynlongParser.State_bodyContext stateBody) {
+        StringBuilder bodyContent = new StringBuilder();
+        
+        if (stateBody instanceof SynlongParser.StateBodyWithLocalContext) {
+            SynlongParser.StateBodyWithLocalContext localCtx = (SynlongParser.StateBodyWithLocalContext) stateBody;
+            bodyContent.append(visit(localCtx.local_block()));
+            // 收集let块中的赋值语句
+            collectAssignmentsFromLetBlock(stateName, localCtx.let_block());
+            bodyContent.append(visit(localCtx.let_block()));
+        } else if (stateBody instanceof SynlongParser.StateBodyLocalOnlyContext) {
+            SynlongParser.StateBodyLocalOnlyContext localCtx = (SynlongParser.StateBodyLocalOnlyContext) stateBody;
+            bodyContent.append(visit(localCtx.local_block()));
+        } else if (stateBody instanceof SynlongParser.StateBodyLetOnlyContext) {
+            SynlongParser.StateBodyLetOnlyContext letCtx = (SynlongParser.StateBodyLetOnlyContext) stateBody;
+            // 收集let块中的赋值语句
+            collectAssignmentsFromLetBlock(stateName, letCtx.let_block());
+            bodyContent.append(visit(letCtx.let_block()));
+        } else if (stateBody instanceof SynlongParser.StateBodySingleEqContext) {
+            SynlongParser.StateBodySingleEqContext eqCtx = (SynlongParser.StateBodySingleEqContext) stateBody;
+            // 收集单个赋值语句
+            collectAssignmentFromEquation(stateName, eqCtx.equation());
+            bodyContent.append(visit(eqCtx.equation()));
+        }
+        
+        context.setStateBody(stateName, bodyContent.toString());
+    }
+    
+    /**
+     * 从let块中收集赋值语句
+     */
+    private void collectAssignmentsFromLetBlock(String stateName, SynlongParser.Let_blockContext letBlock) {
+        if (letBlock == null) return;
+        
+        for (ParseTree child : letBlock.children) {
+            if (child instanceof SynlongParser.EquationContext) {
+                collectAssignmentFromEquation(stateName, (SynlongParser.EquationContext) child);
+            }
+        }
+    }
+    
+    /**
+     * 从方程中收集赋值语句
+     */
+    private void collectAssignmentFromEquation(String stateName, SynlongParser.EquationContext equation) {
+        if (equation instanceof SynlongParser.AssignmentContext) {
+            SynlongParser.AssignmentContext assignment = (SynlongParser.AssignmentContext) equation;
+            String lhs = visit(assignment.lhs());
+            String rhs = visit(assignment.expr());
+            if (lhs != null && rhs != null && !lhs.trim().isEmpty()) {
+                context.addStateAssignment(stateName, lhs + " = " + rhs);
+            }
+        }
+    }
+    
+    /**
+     * 收集状态转换信息
+     */
+    private void collectStateTransitions(String stateName, SynlongParser.State_declContext stateDecl) {
+        // 收集unless转换
+        for (int i = 0; i < stateDecl.getChildCount(); i++) {
+            if ("unless".equals(stateDecl.getChild(i).getText())) {
+                for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
+                    if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
+                        SynlongParser.TransitionContext trans = (SynlongParser.TransitionContext) stateDecl.getChild(j);
+                        String transition = "unless: " + trans.expr().getText() + " -> " + trans.ID().getText();
+                        context.addStateTransition(stateName, transition);
+                    }
+                }
+            } else if ("until".equals(stateDecl.getChild(i).getText())) {
+                for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
+                    if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
+                        SynlongParser.TransitionContext trans = (SynlongParser.TransitionContext) stateDecl.getChild(j);
+                        String transition = "until: " + trans.expr().getText() + " -> " + trans.ID().getText();
+                        context.addStateTransition(stateName, transition);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 第二阶段：生成完整的Lustre代码
+     */
+    private String generateLustreCode(SynlongParser.ProgramContext ctx) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 1. 处理所有声明，收集类型和常量定义
+        for (SynlongParser.DeclsContext decl : ctx.decls()) {
+            if (decl instanceof SynlongParser.TypeDeclarationContext) {
+                visit(decl); // 这会调用visitType_block，将类型定义添加到全局收集器
+            } else if (decl instanceof SynlongParser.ConstDeclarationContext) {
+                visit(decl); // 这会调用visitConst_block，将常量定义添加到全局收集器
+            } else if (decl instanceof SynlongParser.UserOpDeclarationContext) {
+                visit(decl); // 这会调用visitUserOpDecl，将节点定义添加到全局收集器
+            }
+        }
+        
+        // 2. 生成全局类型定义（包括状态枚举）
+        sb.append(generateGlobalTypeDefs());
+        
+        // 3. 生成全局常量定义
+        sb.append(generateGlobalConstDefs());
+        
+        // 4. 生成节点和函数定义
+        for (String nodeDef : context.getGlobalNodeDefs()) {
+            sb.append(nodeDef).append("\n");
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 生成全局类型定义
+     */
+    private String generateGlobalTypeDefs() {
+        StringBuilder sb = new StringBuilder();
+        
+        // 添加状态枚举类型
+        String stateEnumType = context.generateStateEnumType();
+        if (!stateEnumType.isEmpty()) {
+            sb.append(stateEnumType);
+        }
+        
+        // 添加其他全局类型定义
+        for (String typeDef : context.getGlobalTypeDefs()) {
+            sb.append(typeDef).append("\n");
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 生成全局常量定义
+     */
+    private String generateGlobalConstDefs() {
+        StringBuilder sb = new StringBuilder();
+        for (String constDef : context.getGlobalConstDefs()) {
+            sb.append(constDef).append("\n");
         }
         return sb.toString();
     }
@@ -27,12 +268,16 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitType_block(SynlongParser.Type_blockContext ctx) {
         StringBuilder sb = new StringBuilder();
         for (SynlongParser.Type_declContext typeDecl : ctx.type_decl()) {
-            sb.append("type ").append(typeDecl.ID().getText());
+            String typeDefStr = "type " + typeDecl.ID().getText();
             if (typeDecl.type_def() != null) {
                 String typeDef = visit(typeDecl.type_def());
-                sb.append(" = ").append(typeDef);
+                typeDefStr += " = " + typeDef;
             }
-            sb.append(";\n");
+            typeDefStr += ";";
+            
+            // 添加到全局类型定义收集器
+            context.addGlobalTypeDef(typeDefStr);
+            sb.append(typeDefStr).append("\n");
         }
         return sb.toString();
     }
@@ -93,16 +338,20 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitConst_block(SynlongParser.Const_blockContext ctx) {
         StringBuilder sb = new StringBuilder();
         for (SynlongParser.Const_declContext constDecl : ctx.const_decl()) {
-            sb.append("const ").append(constDecl.ID().getText());
+            String constDefStr = "const " + constDecl.ID().getText();
             if (constDecl.type_expr() != null) {
                 String typeExpr = visit(constDecl.type_expr());
-                sb.append(" : ").append(typeExpr);
+                constDefStr += " : " + typeExpr;
             }
             if (constDecl.const_expr() != null) {
                 String constValue = visit(constDecl.const_expr());
-                sb.append(" = ").append(constValue);
+                constDefStr += " = " + constValue;
             }
-            sb.append(";\n");
+            constDefStr += ";";
+            
+            // 添加到全局常量定义收集器
+            context.addGlobalConstDef(constDefStr);
+            sb.append(constDefStr).append("\n");
         }
         return sb.toString();
     }
@@ -113,7 +362,9 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
      * @param isFloat 是否为浮点数类型
      */
     private String convertScientificNotation(String value, boolean isFloat) {
-        if (value == null) return value;
+        if (value == null)  {
+            return null;
+        }
         try {
             if (value.contains("E") || value.contains("e")) {
                 String plainValue = new BigDecimal(value).toPlainString();
@@ -144,6 +395,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         if (ctx.op_body() != null) {
             sb.append(visit(ctx.op_body()));
         }
+        
+        // 添加到全局节点定义收集器
+        context.addGlobalNodeDef(sb.toString());
+        
         return sb.toString();
     }
 
@@ -374,112 +629,64 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     // ================== 状态机转换 ==================
     @Override
     public String visitState_machine(SynlongParser.State_machineContext ctx) {
-        // 1. 收集所有状态
-        List<String> stateNames = new ArrayList<>();
-        String initialState = null;
-        Set<String> finalStates = new HashSet<>();
+        // 使用收集到的状态信息生成状态机代码
+        StringBuilder sb = new StringBuilder();
         
-        class StateInfo {
-            String name;
-            boolean isInitial;
-            boolean isFinal;
-            List<SynlongParser.TransitionContext> unlessTransitions = new ArrayList<>();
-            List<SynlongParser.TransitionContext> untilTransitions = new ArrayList<>();
-            SynlongParser.State_bodyContext stateBody;
+        // 1. 生成状态变量声明
+        sb.append("var state : State;\n");
+        
+        // 2. 生成状态机局部变量（提升到节点作用域）
+        String localVars = context.generateStateMachineLocalVars();
+        if (!localVars.isEmpty()) {
+            sb.append(localVars);
         }
         
-        List<StateInfo> states = new ArrayList<>();
-        
-        for (SynlongParser.State_declContext stateDecl : ctx.state_decl()) {
-            StateInfo info = new StateInfo();
-            info.name = stateDecl.ID().getText();
-            stateNames.add(info.name);
-            
-            // 检查是否为初始状态或最终状态
-            info.isInitial = stateDecl.getText().contains("initial");
-            info.isFinal = stateDecl.getText().contains("final");
-            
-            if (info.isInitial) {
-                initialState = info.name;
-                context.setInitialState(info.name);
-            }
-            if (info.isFinal) {
-                finalStates.add(info.name);
-                context.addFinalState(info.name);
-            }
-            
-            // 解析unless和until转换
-            for (int i = 0; i < stateDecl.getChildCount(); i++) {
-                if ("unless".equals(stateDecl.getChild(i).getText())) {
-                    // 收集unless转换
-                    for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
-                        if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
-                            info.unlessTransitions.add((SynlongParser.TransitionContext) stateDecl.getChild(j));
-                        }
-                    }
-                } else if ("until".equals(stateDecl.getChild(i).getText())) {
-                    // 收集until转换
-                    for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
-                        if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
-                            info.untilTransitions.add((SynlongParser.TransitionContext) stateDecl.getChild(j));
-                        }
-                    }
-                }
-            }
-            
-            // 获取状态体
-            info.stateBody = stateDecl.state_body();
-            states.add(info);
-        }
-        
-        if (initialState == null && !stateNames.isEmpty()) {
-            initialState = stateNames.get(0);
+        // 3. 生成状态转移方程
+        String initialState = context.getInitialState();
+        if (initialState == null && !context.getAllStates().isEmpty()) {
+            initialState = context.getAllStates().iterator().next();
             context.setInitialState(initialState);
         }
-
-        // 2. 生成Lustre类型和变量
-        StringBuilder sb = new StringBuilder();
-        sb.append("type State = enum {").append(String.join(", ", stateNames)).append("};\n");
-        sb.append("var state : State;\n");
-
-        // 3. 生成状态转移方程 - 修复转换逻辑
-        sb.append("state = if (pre(state) = ").append(initialState).append(") then ").append(initialState).append("\n");
         
-        // unless转换优先
-        for (StateInfo state : states) {
-            for (SynlongParser.TransitionContext trans : state.unlessTransitions) {
-                String cond = visit(trans.expr());
-                String target = trans.ID().getText();
-                // 修复条件表达式，确保不为null
-                if (cond != null && !cond.trim().isEmpty()) {
-                    sb.append("else if (pre(state) = ").append(state.name)
-                      .append(" and ").append(cond).append(") then ").append(target).append("\n");
+        if (initialState != null) {
+            sb.append("state = if (pre(state) = ").append(initialState).append(") then ").append(initialState).append("\n");
+            
+            // 生成转换条件
+            for (String stateName : context.getAllStates()) {
+                List<String> transitions = context.getStateTransitions(stateName);
+                for (String transition : transitions) {
+                    // 解析转换字符串 "unless/until: condition -> target"
+                    String[] parts = transition.split(" -> ");
+                    if (parts.length == 2) {
+                        String[] prefixParts = parts[0].split(": ");
+                        if (prefixParts.length == 2) {
+                            String type = prefixParts[0]; // unless 或 until
+                            String condition = prefixParts[1];
+                            String target = parts[1];
+                            
+                            sb.append("else if (pre(state) = ").append(stateName)
+                              .append(" and ").append(condition).append(") then ").append(target).append("\n");
+                        }
+                    }
                 }
             }
+            
+            sb.append("else pre(state);\n");
         }
         
-        // until转换其次
-        for (StateInfo state : states) {
-            for (SynlongParser.TransitionContext trans : state.untilTransitions) {
-                String cond = visit(trans.expr());
-                String target = trans.ID().getText();
-                // 修复条件表达式，确保不为null
-                if (cond != null && !cond.trim().isEmpty()) {
-                    sb.append("else if (pre(state) = ").append(state.name)
-                      .append(" and ").append(cond).append(") then ").append(target).append("\n");
-                }
-            }
+        // 4. 生成状态局部变量的条件赋值（保持语义）
+        String conditionalAssignments = context.generateStateMachineConditionalAssignments();
+        if (!conditionalAssignments.isEmpty()) {
+            sb.append("\n").append(conditionalAssignments);
         }
         
-        sb.append("else pre(state);\n");
-
-        // 4. 生成每个状态的数据定义
-        for (StateInfo state : states) {
-            sb.append("-- state ").append(state.name).append(" data_def: ");
-            if (state.stateBody != null) {
-                sb.append(visit(state.stateBody));
+        // 5. 生成每个状态的数据定义（注释形式）
+        for (String stateName : context.getAllStates()) {
+            String stateBody = context.getStateBody(stateName);
+            if (stateBody != null && !stateBody.trim().isEmpty()) {
+                sb.append("\n-- state ").append(stateName).append(" original body:\n");
+                sb.append("-- ").append(stateBody.replace("\n", "\n-- ")).append("\n");
             }
-            sb.append("\n");
         }
         
         return sb.toString();
