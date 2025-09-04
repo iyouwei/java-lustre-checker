@@ -1265,13 +1265,13 @@ public class SynlongBaseListener implements SynlongListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCaseExpr(SynlongParser.CaseExprContext ctx) { }
+	@Override public void enterCase_expr(SynlongParser.Case_exprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCaseExpr(SynlongParser.CaseExprContext ctx) { }
+	@Override public void exitCase_expr(SynlongParser.Case_exprContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

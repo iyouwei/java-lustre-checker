@@ -711,12 +711,11 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCaseOf(SynlongParser.CaseOfContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code CaseExpr}
-	 * labeled alternative in {@link SynlongParser#case_expr}.
+	 * Visit a parse tree produced by {@link SynlongParser#case_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCaseExpr(SynlongParser.CaseExprContext ctx);
+	T visitCase_expr(SynlongParser.Case_exprContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code PatternId}
 	 * labeled alternative in {@link SynlongParser#pattern}.

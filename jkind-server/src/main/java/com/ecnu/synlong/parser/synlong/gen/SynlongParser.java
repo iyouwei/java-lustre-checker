@@ -5244,36 +5244,27 @@ public class SynlongParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Case_exprContext extends ParserRuleContext {
-		public Case_exprContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_case_expr; }
-	 
-		public Case_exprContext() { }
-		public void copyFrom(Case_exprContext ctx) {
-			super.copyFrom(ctx);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class CaseExprContext extends Case_exprContext {
 		public PatternContext pattern() {
 			return getRuleContext(PatternContext.class,0);
 		}
 		public Simple_exprContext simple_expr() {
 			return getRuleContext(Simple_exprContext.class,0);
 		}
-		public CaseExprContext(Case_exprContext ctx) { copyFrom(ctx); }
+		public Case_exprContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_case_expr; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).enterCaseExpr(this);
+			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).enterCase_expr(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).exitCaseExpr(this);
+			if ( listener instanceof SynlongListener ) ((SynlongListener)listener).exitCase_expr(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof SynlongVisitor ) return ((SynlongVisitor<? extends T>)visitor).visitCaseExpr(this);
+			if ( visitor instanceof SynlongVisitor ) return ((SynlongVisitor<? extends T>)visitor).visitCase_expr(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -5282,7 +5273,6 @@ public class SynlongParser extends Parser {
 		Case_exprContext _localctx = new Case_exprContext(_ctx, getState());
 		enterRule(_localctx, 90, RULE_case_expr);
 		try {
-			_localctx = new CaseExprContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(631);

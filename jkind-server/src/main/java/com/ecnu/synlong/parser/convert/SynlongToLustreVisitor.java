@@ -1214,25 +1214,31 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitCaseOf(SynlongParser.CaseOfContext ctx) {
         String expr = visit(ctx.simple_expr());
-        List<String> cases = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+//        sb.append("if ").append(expr).append(" then "); // 占位符
         for (SynlongParser.Case_exprContext caseExpr : ctx.case_expr()) {
-            String caseItem = visit(caseExpr);
+//            String caseItem = visit(caseExpr);
+            String caseItem = getChildCase(caseExpr, expr);
             if (caseItem != null && !caseItem.trim().isEmpty()) {
-                cases.add(caseItem);
+                sb.append(caseItem);
             }
         }
-        if (expr != null && !cases.isEmpty()) {
-            return "(case " + expr + " of " + String.join(" ", cases) + ")";
-        }
-        return "";
+        return sb.toString();
     }
 
-    @Override
-    public String visitCaseExpr(SynlongParser.CaseExprContext ctx) {
+    /**
+     * 获取子case表达式
+     */
+    public String getChildCase(SynlongParser.Case_exprContext ctx, String matchExpr) {
         String pattern = visit(ctx.pattern());
         String expr = visit(ctx.simple_expr());
+        // switch的default语句
+        if ("_".equals(pattern)) {
+            return expr;
+        }
+        // 常规的case语句
         if (pattern != null && expr != null) {
-            return "| " + pattern + ": " + expr;
+            return "if " + matchExpr + " = " + pattern + " then " + expr + " else ";
         }
         return "";
     }

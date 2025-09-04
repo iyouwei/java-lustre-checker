@@ -1200,17 +1200,15 @@ public interface SynlongListener extends ParseTreeListener {
 	 */
 	void exitCaseOf(SynlongParser.CaseOfContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code CaseExpr}
-	 * labeled alternative in {@link SynlongParser#case_expr}.
+	 * Enter a parse tree produced by {@link SynlongParser#case_expr}.
 	 * @param ctx the parse tree
 	 */
-	void enterCaseExpr(SynlongParser.CaseExprContext ctx);
+	void enterCase_expr(SynlongParser.Case_exprContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code CaseExpr}
-	 * labeled alternative in {@link SynlongParser#case_expr}.
+	 * Exit a parse tree produced by {@link SynlongParser#case_expr}.
 	 * @param ctx the parse tree
 	 */
-	void exitCaseExpr(SynlongParser.CaseExprContext ctx);
+	void exitCase_expr(SynlongParser.Case_exprContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code PatternId}
 	 * labeled alternative in {@link SynlongParser#pattern}.

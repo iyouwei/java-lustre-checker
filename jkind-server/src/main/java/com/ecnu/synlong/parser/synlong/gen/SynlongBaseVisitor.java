@@ -746,7 +746,7 @@ public class SynlongBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCaseExpr(SynlongParser.CaseExprContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCase_expr(SynlongParser.Case_exprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
