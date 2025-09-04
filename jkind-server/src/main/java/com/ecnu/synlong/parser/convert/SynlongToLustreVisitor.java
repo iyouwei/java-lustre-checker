@@ -632,9 +632,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         // 使用收集到的状态信息生成状态机代码
         StringBuilder sb = new StringBuilder();
         
-        // 1. 生成状态变量声明
-        sb.append("var state : State;\n");
-        
         // 2. 生成状态机局部变量（提升到节点作用域）
         String localVars = context.generateStateMachineLocalVars();
         if (!localVars.isEmpty()) {
@@ -678,15 +675,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         String conditionalAssignments = context.generateStateMachineConditionalAssignments();
         if (!conditionalAssignments.isEmpty()) {
             sb.append("\n").append(conditionalAssignments);
-        }
-        
-        // 5. 生成每个状态的数据定义（注释形式）
-        for (String stateName : context.getAllStates()) {
-            String stateBody = context.getStateBody(stateName);
-            if (stateBody != null && !stateBody.trim().isEmpty()) {
-                sb.append("\n-- state ").append(stateName).append(" original body:\n");
-                sb.append("-- ").append(stateBody.replace("\n", "\n-- ")).append("\n");
-            }
         }
         
         return sb.toString();
@@ -815,17 +803,17 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitAnd(SynlongParser.AndContext ctx) {
-        return "and";
+        return " and ";
     }
 
     @Override
     public String visitOr(SynlongParser.OrContext ctx) {
-        return "or";
+        return " or ";
     }
 
     @Override
     public String visitNot(SynlongParser.NotContext ctx) {
-        return "not";
+        return " not ";
     }
 
 

@@ -164,6 +164,9 @@ public class SynlongToLustreContext {
         }
         
         StringBuilder sb = new StringBuilder("var\n");
+        // 1. 生成状态变量声明
+        sb.append("\tstate : State;\n");
+        // 2. 生成其他局部变量声明
         for (Map.Entry<String, String> entry : allVarTypes.entrySet()) {
             String varName = entry.getKey();
             String varType = entry.getValue();
@@ -181,7 +184,16 @@ public class SynlongToLustreContext {
             if (!assignments.isEmpty()) {
                 sb.append("-- State ").append(stateName).append(" assignments\n");
                 for (String assignment : assignments) {
-                    sb.append("if (state = ").append(stateName).append(") then ").append(assignment).append("\n");
+                    // 将原本的 "if (state = S) then <assignment>" 形式改为 "<lhs> = if (state = S) then <rhs>"
+                    int eq = assignment.indexOf('=');
+                    if (eq > 0) {
+                        String lhs = assignment.substring(0, eq).trim();
+                        String rhs = assignment.substring(eq + 1).trim();
+                        sb.append(lhs).append(" = if (state = ").append(stateName).append(") then ").append(rhs).append(" else pre(").append(lhs).append(");\n");
+                    } else {
+                        // 无法解析则回退到原来的包裹形式
+                        sb.append("if (state = ").append(stateName).append(") then ").append(assignment).append("\n");
+                    }
                 }
             }
         }
