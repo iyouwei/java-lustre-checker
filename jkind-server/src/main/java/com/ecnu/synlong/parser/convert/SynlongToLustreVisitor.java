@@ -225,7 +225,13 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         // 3. 生成全局常量定义
         sb.append(generateGlobalConstDefs());
         
-        // 4. 生成节点和函数定义
+        // 4. 生成结构体构造函数
+        String structConstructors = context.generateStructConstructors();
+        if (!structConstructors.isEmpty()) {
+            sb.append(structConstructors);
+        }
+        
+        // 5. 生成节点和函数定义
         for (String nodeDef : context.getGlobalNodeDefs()) {
             sb.append(nodeDef).append("\n");
         }
@@ -905,7 +911,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             if (prefixOp.contains("make")) {
                 // 提取类型名
                 String typeName = prefixOp.replaceAll(".*make\\s+(\\w+).*", "$1");
-                sb.append("make_").append(typeName);
+                sb.append(typeName);
             } else {
                 sb.append(prefixOp);
             }
@@ -921,12 +927,13 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         return sb.toString();
     }
 
-//    @Override
-//    public String visitMakeOp(SynlongParser.MakeOpContext ctx) {
-//        // 处理 (make type) 语法，转换为 make_type 函数调用
-//        String typeName = ctx.ID().getText();
-//        return "make_" + typeName;
-//    }
+    @Override
+    public String visitMakeOp(SynlongParser.MakeOpContext ctx) {
+        // 处理 (make type) 语法，转换为 make_type 函数调用
+        String typeName = ctx.ID().getText();
+        context.addStructType(typeName); // 记录需要生成构造函数的类型
+        return "make_" + typeName;
+    }
 
     // 处理混合构造函数
     @Override
