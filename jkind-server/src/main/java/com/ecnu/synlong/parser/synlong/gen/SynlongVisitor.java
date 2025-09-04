@@ -555,6 +555,13 @@ public interface SynlongVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSimpleAtom(SynlongParser.SimpleAtomContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SimpleIdWithParens}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code BinRelOp}
 	 * labeled alternative in {@link SynlongParser#simple_expr}.
 	 * @param ctx the parse tree

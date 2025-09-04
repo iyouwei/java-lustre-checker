@@ -219,6 +219,7 @@ simple_expr
     | simple_expr bin_bool_op simple_expr # BinBoolOp
     | simple_expr bin_relation_op simple_expr # BinRelOp
     | '(' type_expr simple_expr ')' # TypeCast
+    | '(' ID ')' # SimpleIdWithParens
     ;
 
 tempo_expr
@@ -268,7 +269,7 @@ switch_expr
     ;
 
 case_expr
-    : '|' pattern ':' simple_expr # CaseExpr
+    : '|' pattern ':' simple_expr
     ;
 
 pattern

@@ -934,6 +934,18 @@ public interface SynlongListener extends ParseTreeListener {
 	 */
 	void exitSimpleAtom(SynlongParser.SimpleAtomContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SimpleIdWithParens}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SimpleIdWithParens}
+	 * labeled alternative in {@link SynlongParser#simple_expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code BinRelOp}
 	 * labeled alternative in {@link SynlongParser#simple_expr}.
 	 * @param ctx the parse tree

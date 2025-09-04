@@ -989,6 +989,18 @@ public class SynlongBaseListener implements SynlongListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterBinRelOp(SynlongParser.BinRelOpContext ctx) { }
 	/**
 	 * {@inheritDoc}

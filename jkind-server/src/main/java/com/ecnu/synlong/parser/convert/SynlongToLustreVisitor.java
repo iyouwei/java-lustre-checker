@@ -1119,6 +1119,12 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     }
 
     @Override
+    public String visitSimpleIdWithParens(SynlongParser.SimpleIdWithParensContext ctx) {
+        return ctx.ID().getText();
+    }
+
+
+    @Override
     public String visitPreExpr(SynlongParser.PreExprContext ctx) {
         String expr = visit(ctx.simple_expr());
         if (expr != null) {
@@ -1233,9 +1239,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     public String visitCaseOf(SynlongParser.CaseOfContext ctx) {
         String expr = visit(ctx.simple_expr());
         StringBuilder sb = new StringBuilder();
-//        sb.append("if ").append(expr).append(" then "); // 占位符
         for (SynlongParser.Case_exprContext caseExpr : ctx.case_expr()) {
-//            String caseItem = visit(caseExpr);
             String caseItem = getChildCase(caseExpr, expr);
             if (caseItem != null && !caseItem.trim().isEmpty()) {
                 sb.append(caseItem);
