@@ -29,6 +29,7 @@ public class SynlongToLustreContext {
     
     // 新增：结构体构造函数收集
     private final Set<String> structTypes = new HashSet<>(); // 需要生成构造函数的结构体类型
+    private final Set<String> flattenTypes = new HashSet<>(); // 需要生成flatten函数的结构体类型
     private final Map<String, Map<String, String>> structFields = new HashMap<>(); // 结构体名 -> (字段名 -> 字段类型)
 
     public void addState(String synlongState, String lustreState) {
@@ -387,6 +388,15 @@ public class SynlongToLustreContext {
         return Collections.unmodifiableSet(structTypes);
     }
     
+    // 新增：flatten函数相关方法
+    public void addFlattenType(String typeName) {
+        flattenTypes.add(typeName);
+    }
+    
+    public Set<String> getFlattenTypes() {
+        return Collections.unmodifiableSet(flattenTypes);
+    }
+    
     // 添加结构体字段信息
     public void addStructField(String structName, String fieldName, String fieldType) {
         structFields.computeIfAbsent(structName, k -> new HashMap<>()).put(fieldName, fieldType);
@@ -408,18 +418,19 @@ public class SynlongToLustreContext {
                 // 如果没有字段信息，使用默认的value和status
                 sb.append("node make_").append(typeName).append("(value : int; status : bool) returns (result : ").append(typeName).append(");\n");
                 sb.append("let\n");
-                sb.append("\tresult = {value = value; status = status};\n");
+                sb.append("\tresult = result {value := value};\n");
+                sb.append("\t-- result = result {status := status};\n");
                 sb.append("tel;\n\n");
             } else {
                 // 根据实际字段生成参数和返回值
                 List<String> paramList = new ArrayList<>();
-                List<String> assignList = new ArrayList<>();
+                List<String> fieldNames = new ArrayList<>();
                 
                 for (Map.Entry<String, String> field : fields.entrySet()) {
                     String fieldName = field.getKey();
                     String fieldType = field.getValue();
                     paramList.add(fieldName + " : " + fieldType);
-                    assignList.add(fieldName + " = " + fieldName);
+                    fieldNames.add(fieldName);
                 }
                 
                 // 生成函数签名
@@ -427,9 +438,51 @@ public class SynlongToLustreContext {
                   .append(String.join("; ", paramList))
                   .append(") returns (result : ").append(typeName).append(");\n");
                 
+                // 生成函数体 - 第一个字段正常定义，其他字段注释掉
+                sb.append("let\n");
+                for (int i = 0; i < fieldNames.size(); i++) {
+                    String fieldName = fieldNames.get(i);
+                    if (i == 0) {
+                        sb.append("\tresult = result {").append(fieldName).append(" := ").append(fieldName).append("};\n");
+                    } else {
+                        sb.append("\t-- result = result {").append(fieldName).append(" := ").append(fieldName).append("};\n");
+                    }
+                }
+                sb.append("tel;\n\n");
+            }
+        }
+        
+        return sb.toString();
+    }
+    
+    // 生成结构体flatten函数
+    public String generateFlattenFunctions() {
+        StringBuilder sb = new StringBuilder();
+        
+        for (String typeName : flattenTypes) {
+            Map<String, String> fields = getStructFields(typeName);
+            
+            if (!fields.isEmpty()) {
+                // 生成返回参数列表
+                List<String> returnParams = new ArrayList<>();
+                List<String> assignments = new ArrayList<>();
+                
+                for (Map.Entry<String, String> field : fields.entrySet()) {
+                    String fieldName = field.getKey();
+                    String fieldType = field.getValue();
+                    returnParams.add(fieldName + " : " + fieldType);
+                    assignments.add(fieldName + " = result." + fieldName);
+                }
+                
+                // 生成函数签名
+                sb.append("node flatten_").append(typeName).append("(result : ").append(typeName)
+                  .append(") returns (").append(String.join("; ", returnParams)).append(");\n");
+                
                 // 生成函数体
                 sb.append("let\n");
-                sb.append("\tresult = {").append(String.join("; ", assignList)).append("};\n");
+                for (String assignment : assignments) {
+                    sb.append("\t").append(assignment).append(";\n");
+                }
                 sb.append("tel;\n\n");
             }
         }

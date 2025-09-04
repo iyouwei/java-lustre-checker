@@ -231,7 +231,13 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append(structConstructors);
         }
         
-        // 5. 生成节点和函数定义
+        // 5. 生成结构体flatten函数
+        String flattenFunctions = context.generateFlattenFunctions();
+        if (!flattenFunctions.isEmpty()) {
+            sb.append(flattenFunctions);
+        }
+        
+        // 6. 生成节点和函数定义
         for (String nodeDef : context.getGlobalNodeDefs()) {
             sb.append(nodeDef).append("\n");
         }
@@ -931,6 +937,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 // 提取类型名
                 String typeName = prefixOp.replaceAll(".*make\\s+(\\w+).*", "$1");
                 sb.append(typeName);
+            } else if (prefixOp.contains("flatten")) {
+                // 处理 (flatten type) 语法
+                String typeName = prefixOp.replaceAll(".*flatten\\s+(\\w+).*", "$1");
+                sb.append(typeName);
             } else {
                 sb.append(prefixOp);
             }
@@ -952,6 +962,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         String typeName = ctx.ID().getText();
         context.addStructType(typeName); // 记录需要生成构造函数的类型
         return "make_" + typeName;
+    }
+    
+    @Override
+    public String visitFlattenOp(SynlongParser.FlattenOpContext ctx) {
+        // 处理 (flatten type) 语法，转换为 flatten_type 函数调用
+        String typeName = ctx.ID().getText();
+        context.addFlattenType(typeName); // 记录需要生成flatten函数的类型
+        return "flatten_" + typeName;
     }
 
     // 处理混合构造函数
@@ -1324,11 +1342,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         return ctx.prefix_binary_operator().getText();
     }
 
-    @Override
-    public String visitFlattenOp(SynlongParser.FlattenOpContext ctx) {
-        String typeName = ctx.ID().getText();
-        return "flatten_" + typeName;
-    }
 
     @Override
     public String visitMap(SynlongParser.MapContext ctx) {

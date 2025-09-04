@@ -10,12 +10,22 @@ const SECOND_INPUT : int = 2;
 const VALUE_1 : bool = true;
 node make_binary(value : bool; status : bool) returns (result : binary);
 let
-	result = {value = value; status = status};
+	result = result {value := value};
+	-- result = result {status := status};
 tel;
 
 node make_VOTE3(I1 : binary; I2 : binary; I3 : binary) returns (result : VOTE3);
 let
-	result = {I1 = I1; I2 = I2; I3 = I3};
+	result = result {I1 := I1};
+	-- result = result {I2 := I2};
+	-- result = result {I3 := I3};
+tel;
+
+node flatten_VOTE3(result : VOTE3) returns (I1 : binary; I2 : binary; I3 : binary);
+let
+	I1 = result.I1;
+	I2 = result.I2;
+	I3 = result.I3;
 tel;
 
 node Vote_2_4_0_RFA(I1 : binary; I2 : binary; I3 : binary; I4 : binary) returns (O1 : binary);
@@ -638,6 +648,7 @@ let
 	L1060 = I2;
 	L1061 = I3;
 	L1062 = I4;
+	--%PROPERTY L743;
 	L1119 = FIRST_INPUT;
 	L1120 = SECOND_INPUT;
 	L1123 = THIRD_INPUT;
