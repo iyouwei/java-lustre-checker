@@ -392,8 +392,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         sb.append(kind).append(" ").append(name)
           .append(params)
           .append(" ").append(returns).append(";\n");
+        
         if (ctx.op_body() != null) {
-            sb.append(visit(ctx.op_body()));
+            String opBodyContent = visit(ctx.op_body());
+            sb.append(opBodyContent);
         }
         
         // 添加到全局节点定义收集器
@@ -456,10 +458,52 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     @Override
     public String visitFullOpBody(SynlongParser.FullOpBodyContext ctx) {
         StringBuilder sb = new StringBuilder();
+        
+        // 1. 首先处理原始的local_block
+        String originalLocalVars = "";
         if (ctx.local_block() != null) {
-            sb.append(visit(ctx.local_block()));
+            originalLocalVars = visit(ctx.local_block());
         }
-        sb.append(visit(ctx.let_block()));
+        
+        // 2. 处理let_block
+        String letBlockContent = visit(ctx.let_block());
+        
+        // 3. 生成完整的var块（包括状态机变量）
+        StringBuilder varBlock = new StringBuilder();
+        if (context.hasStateMachineVars()) {
+            varBlock.append("var\n");
+            
+            // 3.1 添加状态变量
+            if (!context.getAllStates().isEmpty()) {
+                varBlock.append("\tstate : State;\n");
+            }
+            
+            // 3.2 添加原始局部变量（去掉var关键字）
+            if (!originalLocalVars.isEmpty()) {
+                String[] lines = originalLocalVars.split("\n");
+                for (String line : lines) {
+                    if (!line.trim().isEmpty() && !line.trim().equals("var")) {
+                        varBlock.append(line).append("\n");
+                    }
+                }
+            }
+            
+            // 3.3 添加状态机局部变量
+            String stateMachineVars = context.generateStateMachineLocalVars();
+            if (!stateMachineVars.isEmpty()) {
+                varBlock.append(stateMachineVars);
+            }
+        } else if (!originalLocalVars.isEmpty()) {
+            // 如果没有状态机变量，直接使用原始局部变量
+            varBlock.append(originalLocalVars);
+        }
+        
+        // 4. 组合结果
+        if (varBlock.length() > 0) {
+            sb.append(varBlock);
+        }
+        sb.append(letBlockContent);
+        
         return sb.toString();
     }
 
@@ -605,13 +649,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitReturn_statement(SynlongParser.Return_statementContext ctx) {
-        // 修复返回语句：从 "returns returns_var" 转换为正确的Lustre语法
-        StringBuilder sb = new StringBuilder();
-        sb.append("returns ");
-        if (ctx.returns_var() != null) {
-            sb.append(visit(ctx.returns_var()));
-        }
-        return sb.toString();
+        // lustre中不需要return
+        return "";
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("returns ");
+//        if (ctx.returns_var() != null) {
+//            sb.append(visit(ctx.returns_var()));
+//        }
+//        return sb.toString();
     }
 
     @Override
@@ -632,13 +677,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         // 使用收集到的状态信息生成状态机代码
         StringBuilder sb = new StringBuilder();
         
-        // 2. 生成状态机局部变量（提升到节点作用域）
-        String localVars = context.generateStateMachineLocalVars();
-        if (!localVars.isEmpty()) {
-            sb.append(localVars);
-        }
-        
-        // 3. 生成状态转移方程
+        // 1. 生成状态转移方程
         String initialState = context.getInitialState();
         if (initialState == null && !context.getAllStates().isEmpty()) {
             initialState = context.getAllStates().iterator().next();
@@ -671,7 +710,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             sb.append("else pre(state);\n");
         }
         
-        // 4. 生成状态局部变量的条件赋值（保持语义）
+        // 2. 生成状态局部变量的条件赋值（保持语义）
         String conditionalAssignments = context.generateStateMachineConditionalAssignments();
         if (!conditionalAssignments.isEmpty()) {
             sb.append("\n").append(conditionalAssignments);

@@ -105,6 +105,11 @@ public class SynlongToLustreContext {
         return stateVarTypes.getOrDefault(stateName, Collections.emptyMap()).get(varName);
     }
     
+    // 生成带前缀的变量名
+    public String getPrefixedVarName(String stateName, String varName) {
+        return stateName + "_" + varName;
+    }
+    
     public void addStateAssignment(String stateName, String assignment) {
         stateAssignments.computeIfAbsent(stateName, k -> new ArrayList<>()).add(assignment);
     }
@@ -113,11 +118,18 @@ public class SynlongToLustreContext {
         return stateAssignments.getOrDefault(stateName, Collections.emptyList());
     }
     
-    // 获取所有状态局部变量的类型信息
+    // 获取所有状态局部变量的类型信息（带前缀）
     public Map<String, String> getAllStateVarTypes() {
         Map<String, String> allVarTypes = new HashMap<>();
-        for (Map<String, String> stateVars : stateVarTypes.values()) {
-            allVarTypes.putAll(stateVars);
+        for (Map.Entry<String, Map<String, String>> stateEntry : stateVarTypes.entrySet()) {
+            String stateName = stateEntry.getKey();
+            Map<String, String> stateVars = stateEntry.getValue();
+            for (Map.Entry<String, String> varEntry : stateVars.entrySet()) {
+                String originalVarName = varEntry.getKey();
+                String varType = varEntry.getValue();
+                String prefixedVarName = getPrefixedVarName(stateName, originalVarName);
+                allVarTypes.put(prefixedVarName, varType);
+            }
         }
         return allVarTypes;
     }
@@ -155,7 +167,7 @@ public class SynlongToLustreContext {
         return "type State = enum {" + String.join(", ", allStates) + "};\n";
     }
     
-    // 生成状态机局部变量定义
+    // 生成状态机局部变量定义（只包含状态机相关变量，不包含状态变量本身）
     public String generateStateMachineLocalVars() {
         Map<String, String> allVarTypes = getAllStateVarTypes();
         
@@ -163,16 +175,19 @@ public class SynlongToLustreContext {
             return "";
         }
         
-        StringBuilder sb = new StringBuilder("var\n");
-        // 1. 生成状态变量声明
-        sb.append("\tstate : State;\n");
-        // 2. 生成其他局部变量声明
+        StringBuilder sb = new StringBuilder();
+        // 只生成状态局部变量，状态变量本身由调用方处理
         for (Map.Entry<String, String> entry : allVarTypes.entrySet()) {
             String varName = entry.getKey();
             String varType = entry.getValue();
             sb.append("\t").append(varName).append(" : ").append(varType).append(";\n");
         }
         return sb.toString();
+    }
+    
+    // 检查是否有状态机变量需要声明
+    public boolean hasStateMachineVars() {
+        return !allStates.isEmpty() || !getAllStateVarTypes().isEmpty();
     }
     
     // 生成状态机条件赋值
@@ -184,12 +199,13 @@ public class SynlongToLustreContext {
             if (!assignments.isEmpty()) {
                 sb.append("-- State ").append(stateName).append(" assignments\n");
                 for (String assignment : assignments) {
-                    // 将原本的 "if (state = S) then <assignment>" 形式改为 "<lhs> = if (state = S) then <rhs>"
+                    // 将原本的 "if (state = S) then <assignment>" 形式改为 "<prefixed_lhs> = if (state = S) then <rhs>"
                     int eq = assignment.indexOf('=');
                     if (eq > 0) {
-                        String lhs = assignment.substring(0, eq).trim();
+                        String originalLhs = assignment.substring(0, eq).trim();
                         String rhs = assignment.substring(eq + 1).trim();
-                        sb.append(lhs).append(" = if (state = ").append(stateName).append(") then ").append(rhs).append(" else pre(").append(lhs).append(");\n");
+                        String prefixedLhs = getPrefixedVarName(stateName, originalLhs);
+                        sb.append(prefixedLhs).append(" = if (state = ").append(stateName).append(") then ").append(rhs).append(" else pre(").append(prefixedLhs).append(");\n");
                     } else {
                         // 无法解析则回退到原来的包裹形式
                         sb.append("if (state = ").append(stateName).append(") then ").append(assignment).append("\n");
