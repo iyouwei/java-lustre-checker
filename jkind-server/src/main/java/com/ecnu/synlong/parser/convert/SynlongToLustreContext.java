@@ -406,7 +406,7 @@ public class SynlongToLustreContext {
             
             if (fields.isEmpty()) {
                 // 如果没有字段信息，使用默认的value和status
-                sb.append("function make_").append(typeName).append("(value : int; status : bool) returns (result : ").append(typeName).append(");\n");
+                sb.append("node make_").append(typeName).append("(value : int; status : bool) returns (result : ").append(typeName).append(");\n");
                 sb.append("let\n");
                 sb.append("\tresult = {value = value; status = status};\n");
                 sb.append("tel;\n\n");
@@ -423,7 +423,7 @@ public class SynlongToLustreContext {
                 }
                 
                 // 生成函数签名
-                sb.append("function make_").append(typeName).append("(")
+                sb.append("node make_").append(typeName).append("(")
                   .append(String.join("; ", paramList))
                   .append(") returns (result : ").append(typeName).append(");\n");
                 
