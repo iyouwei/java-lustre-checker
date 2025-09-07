@@ -7,8 +7,8 @@
         <artifactId>jkind</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>jkind-server</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>java-lustre-checker</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <description>jkind对外服务层</description>
     <properties>
         <java.version>1.8</java.version>
