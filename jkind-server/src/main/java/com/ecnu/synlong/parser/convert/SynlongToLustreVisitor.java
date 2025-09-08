@@ -272,22 +272,23 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         
         // 2. 生成全局类型定义（包括状态枚举）
         sb.append(generateGlobalTypeDefs());
-        
+
         // 3. 生成全局常量定义
         sb.append(generateGlobalConstDefs());
-        
+        sb.append("\n");
+
         // 4. 生成结构体构造函数
         String structConstructors = context.generateStructConstructors();
         if (!structConstructors.isEmpty()) {
             sb.append(structConstructors);
         }
-        
+
         // 5. 生成结构体flatten函数
         String flattenFunctions = context.generateFlattenFunctions();
         if (!flattenFunctions.isEmpty()) {
             sb.append(flattenFunctions);
         }
-        
+
         // 6. 生成节点和函数定义
         for (String nodeDef : context.getGlobalNodeDefs()) {
             sb.append(nodeDef).append("\n");
@@ -736,7 +737,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             String returnVars = visit(ctx.returns_var());
             if (returnVars != null && !returnVars.trim().isEmpty()) {
                 // 生成赋值语句，返回变量不需要前缀
-                return "-- Return statement handled in state machine logic";
+                return "\t-- Return statement handled in state machine logic";
             }
         }
         return "";
@@ -783,14 +784,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                             String condition = prefixParts[1];
                             String target = parts[1];
                             
-                            sb.append("else if (pre(state) = ").append(stateName)
+                            sb.append("\telse if (pre(state) = ").append(stateName)
                               .append(" and ").append(condition).append(") then ").append(target).append("\n");
                         }
                     }
                 }
             }
             
-            sb.append("else pre(state);\n");
+            sb.append("\telse pre(state);\n");
         }
         
         // 2. 生成状态局部变量的条件赋值（保持语义）

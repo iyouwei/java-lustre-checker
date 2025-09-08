@@ -5,6 +5,7 @@ const SENSOR_FAULT : bool = true;
 const MAX_STEER_ANGLE : real = 30.0;
 const SYS_TIME : real = 30.0;
 const MAX_TORQUE : real = 300.0;
+
 node AutoSteerControl(steerAngleSensor : binary; torqueSensor : real; torqueSensorStatus : bool; desiredSteerAngle : real; torqueLimit : real) returns (motorTorque : real);
 var
 	state : State;
@@ -16,30 +17,31 @@ var
 	AutoSteerActive_angleError : real;
 let
 	state = if (pre(state) = SystemInit) then SystemInit
-else if (pre(state) = SystemInit and not torqueSensorStatus) then AutoSteerActive
-else if (pre(state) = SystemInit and torqueSensorStatus) then SensorFault
-else if (pre(state) = RapidRecalibration and steerAngleSensor.value = false or torqueSensorStatus) then AutoSteerActive
-else if (pre(state) = RapidRecalibration and torqueSensorStatus) then SensorFault
-else if (pre(state) = SensorFault and not torqueSensorStatus) then RapidRecalibration
-else if (pre(state) = AutoSteerActive and steerAngleSensor.value = true and not steerAngleSensor.status) then RapidRecalibration
-else if (pre(state) = AutoSteerActive and torqueSensorStatus) then SensorFault
-else pre(state);
+	else if (pre(state) = SystemInit and not torqueSensorStatus) then AutoSteerActive
+	else if (pre(state) = SystemInit and torqueSensorStatus) then SensorFault
+	else if (pre(state) = RapidRecalibration and steerAngleSensor.value = false or torqueSensorStatus) then AutoSteerActive
+	else if (pre(state) = RapidRecalibration and torqueSensorStatus) then SensorFault
+	else if (pre(state) = SensorFault and not torqueSensorStatus) then RapidRecalibration
+	else if (pre(state) = AutoSteerActive and steerAngleSensor.value = true and not steerAngleSensor.status) then RapidRecalibration
+	else if (pre(state) = AutoSteerActive and torqueSensorStatus) then SensorFault
+	else pre(state);
 
--- Variable motorTorque assignments (merged)
-motorTorque = if (state = SystemInit) then SystemInit_torqueCmd else if (state = RapidRecalibration) then RapidRecalibration_correctionTorque else if (state = SensorFault) then SensorFault_safeTorque else pre(motorTorque);
--- Variable SystemInit_torqueCmd assignment
-SystemInit_torqueCmd = if (state = SystemInit) then 0.0 else pre(SystemInit_torqueCmd);
--- Variable AutoSteerActive_assistTorque assignment
-AutoSteerActive_assistTorque = if (state = AutoSteerActive) then AutoSteerActive_angleError else pre(AutoSteerActive_assistTorque);
--- Variable SensorFault_safeTorque assignment
-SensorFault_safeTorque = if (state = SensorFault) then SensorFault_prevMotorTorque * 0.5 else pre(SensorFault_safeTorque);
--- Variable RapidRecalibration_correctionTorque assignment
-RapidRecalibration_correctionTorque = if (state = RapidRecalibration) then torqueSensor else pre(RapidRecalibration_correctionTorque);
--- Variable SensorFault_prevMotorTorque assignment
-SensorFault_prevMotorTorque = if (state = SensorFault) then pre(motorTorque) else pre(SensorFault_prevMotorTorque);
--- Variable AutoSteerActive_angleError assignment
-AutoSteerActive_angleError = if (state = AutoSteerActive) then desiredSteerAngle - torqueSensor else pre(AutoSteerActive_angleError);
+	-- Variable motorTorque assignments (merged)
+	motorTorque = if (state = SystemInit) then SystemInit_torqueCmd else if (state = RapidRecalibration) then RapidRecalibration_correctionTorque else if (state = SensorFault) then SensorFault_safeTorque else pre(motorTorque);
+	-- Variable SystemInit_torqueCmd assignment
+	SystemInit_torqueCmd = if (state = SystemInit) then 0.0 else pre(SystemInit_torqueCmd);
+	-- Variable AutoSteerActive_assistTorque assignment
+	AutoSteerActive_assistTorque = if (state = AutoSteerActive) then AutoSteerActive_angleError else pre(AutoSteerActive_assistTorque);
+	-- Variable SensorFault_safeTorque assignment
+	SensorFault_safeTorque = if (state = SensorFault) then SensorFault_prevMotorTorque * 0.5 else pre(SensorFault_safeTorque);
+	-- Variable RapidRecalibration_correctionTorque assignment
+	RapidRecalibration_correctionTorque = if (state = RapidRecalibration) then torqueSensor else pre(RapidRecalibration_correctionTorque);
+	-- Variable SensorFault_prevMotorTorque assignment
+	SensorFault_prevMotorTorque = if (state = SensorFault) then pre(motorTorque) else pre(SensorFault_prevMotorTorque);
+	-- Variable AutoSteerActive_angleError assignment
+	AutoSteerActive_angleError = if (state = AutoSteerActive) then desiredSteerAngle - torqueSensor else pre(AutoSteerActive_angleError);
 
--- Return statement handled in state machine logic;
+	-- Return statement handled in state machine logic;
+	--%PROPERTY torqueSensorStatus;
 tel
 

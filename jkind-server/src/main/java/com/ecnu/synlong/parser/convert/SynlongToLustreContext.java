@@ -296,14 +296,14 @@ public class SynlongToLustreContext {
             if (assignments.size() == 1) {
                 // 单个状态的赋值
                 StateAssignment assignment = assignments.get(0);
-                sb.append("-- Variable ").append(varName).append(" assignment\n");
-                sb.append(varName).append(" = if (state = ").append(assignment.stateName)
+                sb.append("\t-- Variable ").append(varName).append(" assignment\n");
+                sb.append("\t").append(varName).append(" = if (state = ").append(assignment.stateName)
                   .append(") then ").append(assignment.rhs)
                   .append(" else pre(").append(varName).append(");\n");
             } else {
                 // 多个状态的赋值，生成if-else链
-                sb.append("-- Variable ").append(varName).append(" assignments (merged)\n");
-                sb.append(varName).append(" = ");
+                sb.append("\t-- Variable ").append(varName).append(" assignments (merged)\n");
+                sb.append("\t").append(varName).append(" = ");
                 
                 for (int i = 0; i < assignments.size(); i++) {
                     StateAssignment assignment = assignments.get(i);
