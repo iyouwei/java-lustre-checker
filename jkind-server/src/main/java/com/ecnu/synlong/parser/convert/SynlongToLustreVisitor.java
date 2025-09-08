@@ -222,8 +222,6 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             String lhs = visit(assignment.lhs());
             String rhs = visit(assignment.expr());
             if (lhs != null && rhs != null && !lhs.trim().isEmpty()) {
-                // 确保表达式中有正确的空格
-                rhs = ensureProperSpacing(rhs);
                 context.addStateAssignment(stateName, lhs + " = " + rhs);
             }
         }
@@ -239,7 +237,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
                     if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
                         SynlongParser.TransitionContext trans = (SynlongParser.TransitionContext) stateDecl.getChild(j);
-                        String transition = "unless: " + trans.expr().getText() + " -> " + trans.ID().getText();
+                        String transition = "unless: " + visit(trans) + " -> " + trans.ID().getText();
                         context.addStateTransition(stateName, transition);
                     }
                 }
@@ -247,14 +245,14 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 for (int j = i + 1; j < stateDecl.getChildCount(); j++) {
                     if (stateDecl.getChild(j) instanceof SynlongParser.TransitionContext) {
                         SynlongParser.TransitionContext trans = (SynlongParser.TransitionContext) stateDecl.getChild(j);
-                        String transition = "until: " + trans.expr().getText() + " -> " + trans.ID().getText();
+                        String transition = "until: " + visit(trans) + " -> " + trans.ID().getText();
                         context.addStateTransition(stateName, transition);
                     }
                 }
             }
         }
     }
-    
+
     /**
      * 第二阶段：生成完整的Lustre代码
      */
@@ -786,7 +784,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                             String target = parts[1];
                             
                             sb.append("else if (pre(state) = ").append(stateName)
-                              .append(" and ").append(ensureProperSpacing(condition)).append(") then ").append(target).append("\n");
+                              .append(" and ").append(condition).append(") then ").append(target).append("\n");
                         }
                     }
                 }
@@ -821,36 +819,8 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 condition = condition.substring(0, cutIndex).trim();
             }
         }
-        
-        // 确保条件表达式中的操作符有正确的空格
-        condition = ensureProperSpacing(condition);
-        
+
         return condition;
-    }
-    
-    /**
-     * 确保表达式中的操作符有正确的空格
-     */
-    private String ensureProperSpacing(String expression) {
-        if (expression == null) return null;
-        
-        // 处理布尔操作符的空格
-        expression = expression.replaceAll("\\s*(\\bor\\b)\\s*", " or ");
-        expression = expression.replaceAll("\\s*(\\band\\b)\\s*", " and ");
-        expression = expression.replaceAll("\\s*(\\bnot\\b)\\s*", " not ");
-        
-        // 处理比较操作符的空格
-        expression = expression.replaceAll("\\s*=\\s*", " = ");
-        expression = expression.replaceAll("\\s*<>\\s*", " <> ");
-        expression = expression.replaceAll("\\s*<=\\s*", " <= ");
-        expression = expression.replaceAll("\\s*>=\\s*", " >= ");
-        expression = expression.replaceAll("\\s*<\\s*", " < ");
-        expression = expression.replaceAll("\\s*>\\s*", " > ");
-        
-        // 清理多余的空格
-        expression = expression.replaceAll("\\s+", " ").trim();
-        
-        return expression;
     }
 
     // 处理原子表达式 - 修复数值转换
@@ -1153,7 +1123,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
         String op = visit(ctx.unary_arith_op());
         String expr = visit(ctx.simple_expr());
         if (op != null && expr != null) {
-            return op + expr;
+            return op + " " + expr;
         }
         return "";
     }
