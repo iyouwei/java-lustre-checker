@@ -1,194 +1,45 @@
-type State = enum {Init, FAULT_STATE, NO_FAULT_STATE, Rapid};
-type VOTE3 = struct {I1: binary; I2: binary; I3: binary};
-type VOTE2 = struct {I1: binary; I2: binary};
-type VM3Value = struct {output1: analog; output2: binary; output3: binary};
-type states = struct {okNumber: int; input1: analog; input2: analog};
-type mulriple = struct {value: int; status: bool};
-type ladder = struct {analog: analog; input_num: int};
-type DOR = struct {O1: binary; O2: binary};
+type State = enum {SystemInit, RapidRecalibration, SensorFault, AutoSteerActive};
 type binary = struct {value: bool; status: bool};
-type AVE4uniformity = struct {I1: bool; I2: bool; I3: bool; I4: bool};
-type AVE4States = struct {okNumber: int; I1: analog; I2: analog; I3: analog};
-type analog = struct {value: real; status: bool};
-const VALUE_1 : bool = true;
-const VALUE_0 : bool = false;
-const THIRD_INPUT : int = 3;
-const Ta : real = 30.000;
-const SIXTH_INPUT : int = 6;
-const SEVENTH_INPUT : int = 7;
-const SECOND_INPUT : int = 2;
-const NO_INPUT : int = 0;
-const NO_FAULT : bool = false;
-const NO_ACTION : bool = false;
-const MINFLOAT : real = 0.00000000000000000000000000000000000085;
-const MAXFLOAT : real = 330000000000000000000000000000000000000.0;
-const FOURTH_INPUT : int = 4;
-const FIRST_INPUT : int = 1;
-const FIFTH_INPUT : int = 5;
-const FAULT : bool = true;
-const ACTION : bool = true;
-const Ni : real[10] = [0.14, -0.84, -3.75, 3.38, -0.95, 0.15, -0.01, 0.000812, -0.000607, -0.018];
-const Ji : int[10] = [-2, -1, 0, 1, 2, 3, 4, 5, -9, -7];
-const Ii : int[10] = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3];
-const EPSILON1 : real = 0.00001;
-node make_analog(value : real; status : bool) returns (result : analog);
-let
-	result = result {value := value};
-	-- result = result {status := status};
-tel;
-
-node FIT(I1 : binary; I2 : analog; G : real; T1 : real) returns (O1 : analog);
+const NO_SENSOR_FAULT : bool = false;
+const SENSOR_FAULT : bool = true;
+const MAX_STEER_ANGLE : real = 30.0;
+const SYS_TIME : real = 30.0;
+const MAX_TORQUE : real = 300.0;
+node AutoSteerControl(steerAngleSensor : binary; torqueSensor : real; torqueSensorStatus : bool; desiredSteerAngle : real; torqueLimit : real) returns (motorTorque : real);
 var
 	state : State;
-	_L10 : real;
-	_L1 : real;
-	_L3 : real;
-	FAULT_STATE__L2 : real;
-	NO_FAULT_STATE__L2 : real;
-	FAULT_STATE__L4 : real;
-	FAULT_STATE__L19 : analog;
-	NO_FAULT_STATE__L4 : real;
-	FAULT_STATE__L6 : analog;
-	NO_FAULT_STATE__L5 : real;
-	FAULT_STATE__L7 : real;
-	NO_FAULT_STATE__L42 : binary;
-	NO_FAULT_STATE__L43 : bool;
-	NO_FAULT_STATE__L44 : bool;
-	NO_FAULT_STATE__L45 : bool;
-	FAULT_STATE__L22 : real;
-	FAULT_STATE__L23 : real;
-	FAULT_STATE__L24 : real;
-	NO_FAULT_STATE__L40 : analog;
-	FAULT_STATE__L25 : real;
-	FAULT_STATE__L20 : real;
-	FAULT_STATE__L21 : real;
-	NO_FAULT_STATE__L46 : bool;
-	NO_FAULT_STATE__L47 : bool;
-	NO_FAULT_STATE__L48 : bool;
-	Init__L4 : bool;
-	Init__L2 : analog;
-	Rapid__L2 : real;
-	NO_FAULT_STATE__L53 : real;
-	FAULT_STATE__L8 : real;
-	NO_FAULT_STATE__L54 : real;
-	NO_FAULT_STATE__L55 : real;
-	NO_FAULT_STATE__L8 : analog;
-	NO_FAULT_STATE__L56 : real;
-	NO_FAULT_STATE__L12 : real;
-	FAULT_STATE__L18 : bool;
-	FAULT_STATE__L11 : analog;
-	Rapid__L6 : bool;
-	Rapid__L4 : analog;
-	NO_FAULT_STATE__L52 : analog;
-	Rapid__L5 : analog;
-	NO_FAULT_STATE__L18 : real;
-	NO_FAULT_STATE__L58 : real;
+	SystemInit_torqueCmd : real;
+	AutoSteerActive_assistTorque : real;
+	SensorFault_safeTorque : real;
+	RapidRecalibration_correctionTorque : real;
+	SensorFault_prevMotorTorque : real;
+	AutoSteerActive_angleError : real;
 let
-	state = if (pre(state) = Init) then Init
-else if (pre(state) = Init and NO_FAULT=I2.status) then NO_FAULT_STATE
-else if (pre(state) = Init and FAULT=I2.status) then FAULT_STATE
-else if (pre(state) = FAULT_STATE and NO_FAULT=I2.status) then Rapid
-else if (pre(state) = NO_FAULT_STATE and VALUE_1=I1.valueandNO_FAULT=I1.status) then Rapid
-else if (pre(state) = NO_FAULT_STATE and FAULT=I2.status) then FAULT_STATE
-else if (pre(state) = Rapid and VALUE_0=I1.valueorFAULT=I1.status) then NO_FAULT_STATE
-else if (pre(state) = Rapid and FAULT=I2.status) then FAULT_STATE
+	state = if (pre(state) = SystemInit) then SystemInit
+else if (pre(state) = SystemInit and not torqueSensorStatus) then AutoSteerActive
+else if (pre(state) = SystemInit and torqueSensorStatus) then SensorFault
+else if (pre(state) = RapidRecalibration and steerAngleSensor.value = false or torqueSensorStatus) then AutoSteerActive
+else if (pre(state) = RapidRecalibration and torqueSensorStatus) then SensorFault
+else if (pre(state) = SensorFault and not torqueSensorStatus) then RapidRecalibration
+else if (pre(state) = AutoSteerActive and steerAngleSensor.value = true and not steerAngleSensor.status) then RapidRecalibration
+else if (pre(state) = AutoSteerActive and torqueSensorStatus) then SensorFault
 else pre(state);
 
--- Variable _L10 assignments (merged)
-_L10 = if (state = FAULT_STATE) then FAULT_STATE__L4 * FAULT_STATE__L8 else if (state = NO_FAULT_STATE) then -NO_FAULT_STATE__L1 else pre(_L10);
--- Variable _L1 assignments (merged)
-_L1 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L2 / NO_FAULT_STATE__L5 else if (state = Rapid) then Rapid__L3 * Rapid__L2 else pre(_L1);
--- Variable _L3 assignments (merged)
-_L3 = if (state = Init) then 0.0 else if (state = FAULT_STATE) then Ta else if (state = Rapid) then G else pre(_L3);
--- Variable FAULT_STATE__L2 assignment
-FAULT_STATE__L2 = if (state = FAULT_STATE) then FAULT_STATE__L3 / FAULT_STATE__L24 else pre(FAULT_STATE__L2);
--- Variable NO_FAULT_STATE__L2 assignment
-NO_FAULT_STATE__L2 = if (state = NO_FAULT_STATE) then Ta else pre(NO_FAULT_STATE__L2);
--- Variable FAULT_STATE__L4 assignment
-FAULT_STATE__L4 = if (state = FAULT_STATE) then G else pre(FAULT_STATE__L4);
--- Variable FAULT_STATE__L19 assignment
-FAULT_STATE__L19 = if (state = FAULT_STATE) then pre(O1) else pre(FAULT_STATE__L19);
--- Variable FAULT_STATE__L5 assignment
-FAULT_STATE__L5 = if (state = FAULT_STATE) then ExpR_MathLib(FAULT_STATE__L7) else pre(FAULT_STATE__L5);
--- Variable NO_FAULT_STATE__L4 assignment
-NO_FAULT_STATE__L4 = if (state = NO_FAULT_STATE) then G else pre(NO_FAULT_STATE__L4);
--- Variable FAULT_STATE__L6 assignment
-FAULT_STATE__L6 = if (state = FAULT_STATE) then I2 else pre(FAULT_STATE__L6);
--- Variable NO_FAULT_STATE__L5 assignment
-NO_FAULT_STATE__L5 = if (state = NO_FAULT_STATE) then T1 else pre(NO_FAULT_STATE__L5);
--- Variable FAULT_STATE__L7 assignment
-FAULT_STATE__L7 = if (state = FAULT_STATE) then -FAULT_STATE__L2 else pre(FAULT_STATE__L7);
--- Variable NO_FAULT_STATE__L42 assignment
-NO_FAULT_STATE__L42 = if (state = NO_FAULT_STATE) then I1 else pre(NO_FAULT_STATE__L42);
--- Variable NO_FAULT_STATE__L43 assignment
-NO_FAULT_STATE__L43 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L42.status else pre(NO_FAULT_STATE__L43);
--- Variable NO_FAULT_STATE__L44 assignment
-NO_FAULT_STATE__L44 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L45 = NO_FAULT_STATE__L43 else pre(NO_FAULT_STATE__L44);
--- Variable NO_FAULT_STATE__L45 assignment
-NO_FAULT_STATE__L45 = if (state = NO_FAULT_STATE) then NO_FAULT else pre(NO_FAULT_STATE__L45);
--- Variable FAULT_STATE__L22 assignment
-FAULT_STATE__L22 = if (state = FAULT_STATE) then FAULT_STATE__L10 + FAULT_STATE__L21 else pre(FAULT_STATE__L22);
--- Variable FAULT_STATE__L23 assignment
-FAULT_STATE__L23 = if (state = FAULT_STATE) then FAULT_STATE__L19.value else pre(FAULT_STATE__L23);
--- Variable NO_FAULT_STATE__L40 assignment
-NO_FAULT_STATE__L40 = if (state = NO_FAULT_STATE) then make_analog(NO_FAULT_STATE__L55, NO_FAULT_STATE__L46) else pre(NO_FAULT_STATE__L40);
--- Variable FAULT_STATE__L24 assignment
-FAULT_STATE__L24 = if (state = FAULT_STATE) then T1 else pre(FAULT_STATE__L24);
--- Variable NO_FAULT_STATE_O1 assignment
-NO_FAULT_STATE_O1 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L40 else pre(NO_FAULT_STATE_O1);
--- Variable FAULT_STATE__L20 assignment
-FAULT_STATE__L20 = if (state = FAULT_STATE) then FAULT_STATE__L23 - FAULT_STATE__L10 else pre(FAULT_STATE__L20);
--- Variable FAULT_STATE__L21 assignment
-FAULT_STATE__L21 = if (state = FAULT_STATE) then FAULT_STATE__L20 * FAULT_STATE__L25 else pre(FAULT_STATE__L21);
--- Variable NO_FAULT_STATE__L46 assignment
-NO_FAULT_STATE__L46 = if (state = NO_FAULT_STATE) then if NO_FAULT_STATE__L44 then NO_FAULT_STATE__L47 else NO_FAULT_STATE__L48 else pre(NO_FAULT_STATE__L46);
--- Variable NO_FAULT_STATE__L47 assignment
-NO_FAULT_STATE__L47 = if (state = NO_FAULT_STATE) then NO_FAULT else pre(NO_FAULT_STATE__L47);
--- Variable NO_FAULT_STATE__L48 assignment
-NO_FAULT_STATE__L48 = if (state = NO_FAULT_STATE) then FAULT else pre(NO_FAULT_STATE__L48);
--- Variable Init__L4 assignment
-Init__L4 = if (state = Init) then NO_FAULT else pre(Init__L4);
--- Variable Init_O1 assignment
-Init_O1 = if (state = Init) then Init__L2 else pre(Init_O1);
--- Variable Init__L2 assignment
-Init__L2 = if (state = Init) then make_analog(Init__L3, Init__L4) else pre(Init__L2);
--- Variable FAULT_STATE_O1 assignment
-FAULT_STATE_O1 = if (state = FAULT_STATE) then FAULT_STATE__L11 else pre(FAULT_STATE_O1);
--- Variable Rapid__L2 assignment
-Rapid__L2 = if (state = Rapid) then Rapid__L4.value else pre(Rapid__L2);
--- Variable NO_FAULT_STATE__L53 assignment
-NO_FAULT_STATE__L53 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L56 - NO_FAULT_STATE__L18 else pre(NO_FAULT_STATE__L53);
--- Variable FAULT_STATE__L8 assignment
-FAULT_STATE__L8 = if (state = FAULT_STATE) then FAULT_STATE__L6.value else pre(FAULT_STATE__L8);
--- Variable NO_FAULT_STATE__L54 assignment
-NO_FAULT_STATE__L54 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L53 * NO_FAULT_STATE__L58 else pre(NO_FAULT_STATE__L54);
--- Variable NO_FAULT_STATE__L55 assignment
-NO_FAULT_STATE__L55 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L18 + NO_FAULT_STATE__L54 else pre(NO_FAULT_STATE__L55);
--- Variable NO_FAULT_STATE__L8 assignment
-NO_FAULT_STATE__L8 = if (state = NO_FAULT_STATE) then I2 else pre(NO_FAULT_STATE__L8);
--- Variable NO_FAULT_STATE__L56 assignment
-NO_FAULT_STATE__L56 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L52.value else pre(NO_FAULT_STATE__L56);
--- Variable NO_FAULT_STATE__L12 assignment
-NO_FAULT_STATE__L12 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L8.value else pre(NO_FAULT_STATE__L12);
--- Variable FAULT_STATE__L18 assignment
-FAULT_STATE__L18 = if (state = FAULT_STATE) then FAULT else pre(FAULT_STATE__L18);
--- Variable Rapid__L6 assignment
-Rapid__L6 = if (state = Rapid) then NO_FAULT else pre(Rapid__L6);
--- Variable FAULT_STATE__L11 assignment
-FAULT_STATE__L11 = if (state = FAULT_STATE) then make_analog(FAULT_STATE__L22, FAULT_STATE__L18) else pre(FAULT_STATE__L11);
--- Variable Rapid__L4 assignment
-Rapid__L4 = if (state = Rapid) then I2 else pre(Rapid__L4);
--- Variable Rapid__L5 assignment
-Rapid__L5 = if (state = Rapid) then make_analog(Rapid__L1, Rapid__L6) else pre(Rapid__L5);
--- Variable Rapid_O1 assignment
-Rapid_O1 = if (state = Rapid) then Rapid__L5 else pre(Rapid_O1);
--- Variable NO_FAULT_STATE__L52 assignment
-NO_FAULT_STATE__L52 = if (state = NO_FAULT_STATE) then pre(O1) else pre(NO_FAULT_STATE__L52);
--- Variable NO_FAULT_STATE__L18 assignment
-NO_FAULT_STATE__L18 = if (state = NO_FAULT_STATE) then NO_FAULT_STATE__L4 * NO_FAULT_STATE__L12 else pre(NO_FAULT_STATE__L18);
--- Variable NO_FAULT_STATE__L58 assignment
-NO_FAULT_STATE__L58 = if (state = NO_FAULT_STATE) then ExpR_MathLib(NO_FAULT_STATE__L10) else pre(NO_FAULT_STATE__L58);
+-- Variable motorTorque assignments (merged)
+motorTorque = if (state = SystemInit) then SystemInit_torqueCmd else if (state = RapidRecalibration) then RapidRecalibration_correctionTorque else if (state = SensorFault) then SensorFault_safeTorque else pre(motorTorque);
+-- Variable SystemInit_torqueCmd assignment
+SystemInit_torqueCmd = if (state = SystemInit) then 0.0 else pre(SystemInit_torqueCmd);
+-- Variable AutoSteerActive_assistTorque assignment
+AutoSteerActive_assistTorque = if (state = AutoSteerActive) then AutoSteerActive_angleError else pre(AutoSteerActive_assistTorque);
+-- Variable SensorFault_safeTorque assignment
+SensorFault_safeTorque = if (state = SensorFault) then SensorFault_prevMotorTorque * 0.5 else pre(SensorFault_safeTorque);
+-- Variable RapidRecalibration_correctionTorque assignment
+RapidRecalibration_correctionTorque = if (state = RapidRecalibration) then torqueSensor else pre(RapidRecalibration_correctionTorque);
+-- Variable SensorFault_prevMotorTorque assignment
+SensorFault_prevMotorTorque = if (state = SensorFault) then pre(motorTorque) else pre(SensorFault_prevMotorTorque);
+-- Variable AutoSteerActive_angleError assignment
+AutoSteerActive_angleError = if (state = AutoSteerActive) then desiredSteerAngle - torqueSensor else pre(AutoSteerActive_angleError);
 
-;
+-- Return statement handled in state machine logic;
 tel
 

@@ -41,6 +41,10 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
     private void collectStateMachineFromUserOp(SynlongParser.User_op_declContext ctx) {
         if (ctx instanceof SynlongParser.UserOpDeclContext) {
             SynlongParser.UserOpDeclContext userOpCtx = (SynlongParser.UserOpDeclContext) ctx;
+            
+            // 收集全局变量（输入、输出、局部变量）
+            collectGlobalVariables(userOpCtx);
+            
             if (userOpCtx.op_body() instanceof SynlongParser.FullOpBodyContext) {
                 SynlongParser.FullOpBodyContext fullBody = (SynlongParser.FullOpBodyContext) userOpCtx.op_body();
                 if (fullBody.let_block() != null) {
@@ -58,6 +62,53 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             if (child instanceof SynlongParser.StateMachineReturnContext) {
                 SynlongParser.StateMachineReturnContext eq = (SynlongParser.StateMachineReturnContext) child;
                 collectStateMachineInfo(eq.state_machine());
+            }
+        }
+    }
+    
+    /**
+     * 收集全局变量（输入、输出、局部变量）
+     */
+    private void collectGlobalVariables(SynlongParser.UserOpDeclContext userOpCtx) {
+        // 收集输入参数
+        if (userOpCtx.params() != null) {
+            collectParamsAsGlobalVars(userOpCtx.params());
+        }
+        
+        // 收集输出参数
+        if (userOpCtx.returns_clause() != null && userOpCtx.returns_clause().params() != null) {
+            collectParamsAsGlobalVars(userOpCtx.returns_clause().params());
+        }
+        
+        // 收集节点级局部变量
+        if (userOpCtx.op_body() instanceof SynlongParser.FullOpBodyContext) {
+            SynlongParser.FullOpBodyContext fullBody = (SynlongParser.FullOpBodyContext) userOpCtx.op_body();
+            if (fullBody.local_block() != null) {
+                collectLocalBlockAsGlobalVars(fullBody.local_block());
+            }
+        }
+    }
+    
+    /**
+     * 收集参数作为全局变量
+     */
+    private void collectParamsAsGlobalVars(SynlongParser.ParamsContext params) {
+        for (SynlongParser.Var_declsContext varDecls : params.var_decls()) {
+            for (SynlongParser.Var_idContext varId : varDecls.var_id()) {
+                String varName = varId.getText();
+                context.addGlobalVariable(varName);
+            }
+        }
+    }
+    
+    /**
+     * 收集局部块作为全局变量
+     */
+    private void collectLocalBlockAsGlobalVars(SynlongParser.Local_blockContext localBlock) {
+        for (SynlongParser.Var_declsContext varDecls : localBlock.var_decls()) {
+            for (SynlongParser.Var_idContext varId : varDecls.var_id()) {
+                String varName = varId.getText();
+                context.addGlobalVariable(varName);
             }
         }
     }
@@ -171,6 +222,8 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
             String lhs = visit(assignment.lhs());
             String rhs = visit(assignment.expr());
             if (lhs != null && rhs != null && !lhs.trim().isEmpty()) {
+                // 确保表达式中有正确的空格
+                rhs = ensureProperSpacing(rhs);
                 context.addStateAssignment(stateName, lhs + " = " + rhs);
             }
         }
@@ -680,14 +733,15 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitReturn_statement(SynlongParser.Return_statementContext ctx) {
-        // lustre中不需要return
+        // 在状态机中，return语句实际上是赋值语句
+        if (ctx.returns_var() != null) {
+            String returnVars = visit(ctx.returns_var());
+            if (returnVars != null && !returnVars.trim().isEmpty()) {
+                // 生成赋值语句，返回变量不需要前缀
+                return "-- Return statement handled in state machine logic";
+            }
+        }
         return "";
-//        StringBuilder sb = new StringBuilder();
-//        sb.append("returns ");
-//        if (ctx.returns_var() != null) {
-//            sb.append(visit(ctx.returns_var()));
-//        }
-//        return sb.toString();
     }
 
     @Override
@@ -732,7 +786,7 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                             String target = parts[1];
                             
                             sb.append("else if (pre(state) = ").append(stateName)
-                              .append(" and ").append(condition).append(") then ").append(target).append("\n");
+                              .append(" and ").append(ensureProperSpacing(condition)).append(") then ").append(target).append("\n");
                         }
                     }
                 }
@@ -767,7 +821,36 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
                 condition = condition.substring(0, cutIndex).trim();
             }
         }
+        
+        // 确保条件表达式中的操作符有正确的空格
+        condition = ensureProperSpacing(condition);
+        
         return condition;
+    }
+    
+    /**
+     * 确保表达式中的操作符有正确的空格
+     */
+    private String ensureProperSpacing(String expression) {
+        if (expression == null) return null;
+        
+        // 处理布尔操作符的空格
+        expression = expression.replaceAll("\\s*(\\bor\\b)\\s*", " or ");
+        expression = expression.replaceAll("\\s*(\\band\\b)\\s*", " and ");
+        expression = expression.replaceAll("\\s*(\\bnot\\b)\\s*", " not ");
+        
+        // 处理比较操作符的空格
+        expression = expression.replaceAll("\\s*=\\s*", " = ");
+        expression = expression.replaceAll("\\s*<>\\s*", " <> ");
+        expression = expression.replaceAll("\\s*<=\\s*", " <= ");
+        expression = expression.replaceAll("\\s*>=\\s*", " >= ");
+        expression = expression.replaceAll("\\s*<\\s*", " < ");
+        expression = expression.replaceAll("\\s*>\\s*", " > ");
+        
+        // 清理多余的空格
+        expression = expression.replaceAll("\\s+", " ").trim();
+        
+        return expression;
     }
 
     // 处理原子表达式 - 修复数值转换
@@ -873,17 +956,17 @@ public class SynlongToLustreVisitor extends SynlongBaseVisitor<String> {
 
     @Override
     public String visitAnd(SynlongParser.AndContext ctx) {
-        return " and ";
+        return "and";
     }
 
     @Override
     public String visitOr(SynlongParser.OrContext ctx) {
-        return " or ";
+        return "or";
     }
 
     @Override
     public String visitNot(SynlongParser.NotContext ctx) {
-        return " not ";
+        return "not";
     }
 
 

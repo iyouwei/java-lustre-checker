@@ -1,0 +1,92 @@
+const
+-- 转向传感器正常
+NO_SENSOR_FAULT : bool = false;
+-- 转向传感器故障
+SENSOR_FAULT : bool = true;
+-- 最大允许转向角度（单位：度）
+MAX_STEER_ANGLE : real = 30.0;
+-- 系统时间常量
+SYS_TIME : real = 30.0;
+-- EPS 电机最大输出扭矩
+MAX_TORQUE : real = 300.0;
+
+type
+-- 数字量，带状态位
+binary = {
+    value : bool,
+    status : bool
+};
+
+node AutoSteerControl(
+    steerAngleSensor : binary;          -- 方向盘角度传感器
+    torqueSensor : real;                -- 扭矩传感器数值
+    torqueSensorStatus : bool;          -- 扭矩传感器状态（true=故障）
+    desiredSteerAngle : real;           -- 自动驾驶期望角度
+    torqueLimit : real                  -- 系统允许的最大助力
+) returns (
+    motorTorque : real last = 0.0       -- EPS 助力电机输出扭矩
+)
+let
+    automaton EPS_SM
+        initial state SystemInit         -- 系统初始化
+        unless
+            if not torqueSensorStatus
+                restart AutoSteerActive; -- 无故障 → 自动转向
+            if torqueSensorStatus
+                restart SensorFault;     -- 检测到故障 → 故障模式
+
+        var
+            torqueCmd : real;
+
+        let
+            torqueCmd = 0.0;
+            motorTorque = torqueCmd;
+        tel
+
+    state AutoSteerActive                -- 自动转向正常
+    unless
+        if steerAngleSensor.value = true and not steerAngleSensor.status
+            restart RapidRecalibration;  -- 检测到突发转向 → 快速校正
+        if torqueSensorStatus
+            restart SensorFault;         -- 扭矩传感器故障 → 故障模式
+    var
+        angleError : real;
+        assistTorque : real;
+
+    let
+        -- 根据期望角度与实际扭矩计算输出
+        angleError = desiredSteerAngle - torqueSensor;
+        assistTorque = angleError;
+    tel
+
+    state SensorFault                    -- 传感器故障模式
+    unless
+        if not torqueSensorStatus
+            restart RapidRecalibration;  -- 故障恢复 → 快速校正
+    var
+        safeTorque : real;
+        prevMotorTorque : real;
+
+    let
+        prevMotorTorque = last 'motorTorque;
+        safeTorque = prevMotorTorque * 0.5;  -- 降级策略：扭矩减半
+        motorTorque = safeTorque;
+    tel
+
+    state RapidRecalibration             -- 快速校正模式
+    unless
+        if steerAngleSensor.value = false or torqueSensorStatus
+            restart AutoSteerActive;     -- 校正完成 → 回自动转向
+        if torqueSensorStatus
+            restart SensorFault;         -- 校正时仍故障 → 故障模式
+    var
+        correctionTorque : real;
+
+    let
+        -- 校正模式下直接使用传感器值作为辅助扭矩
+        correctionTorque = torqueSensor;
+        motorTorque = correctionTorque;
+    tel
+
+    returns motorTorque;
+tel

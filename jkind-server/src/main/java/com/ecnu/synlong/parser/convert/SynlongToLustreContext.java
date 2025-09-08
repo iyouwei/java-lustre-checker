@@ -7,6 +7,8 @@ public class SynlongToLustreContext {
     private final Map<String, String> stateNameMap = new HashMap<>();
     // 已声明变量集合
     private final Set<String> declaredVars = new HashSet<>();
+    // 全局变量集合（输入、输出、节点级局部变量）
+    private final Set<String> globalVars = new HashSet<>();
     // 初始状态
     private String initialState = null;
     // 最终状态集合
@@ -46,6 +48,14 @@ public class SynlongToLustreContext {
 
     public boolean isVarDeclared(String var) {
         return declaredVars.contains(var);
+    }
+    
+    public void addGlobalVariable(String var) {
+        globalVars.add(var);
+    }
+    
+    public boolean isGlobalVariable(String var) {
+        return globalVars.contains(var);
     }
 
     public void setInitialState(String state) {
@@ -121,12 +131,17 @@ public class SynlongToLustreContext {
                stateVarTypes.get(stateName).containsKey(varName);
     }
     
-    // 获取变量在特定状态下的正确名称（如果是状态变量则加前缀）
+    // 检查变量是否需要前缀（只有非全局的状态变量才需要前缀）
+    public boolean needsPrefix(String stateName, String varName) {
+        return isStateLocalVar(stateName, varName) && !isGlobalVariable(varName);
+    }
+    
+    // 获取变量在特定状态下的正确名称（如果是状态变量且非全局变量则加前缀）
     public String getCorrectVarName(String stateName, String varName) {
-        if (isStateLocalVar(stateName, varName)) {
+        if (needsPrefix(stateName, varName)) {
             return getPrefixedVarName(stateName, varName);
         }
-        return varName; // 全局变量保持原名
+        return varName; // 全局变量或非状态变量保持原名
     }
     
     public void addStateAssignment(String stateName, String assignment) {
@@ -146,8 +161,11 @@ public class SynlongToLustreContext {
             for (Map.Entry<String, String> varEntry : stateVars.entrySet()) {
                 String originalVarName = varEntry.getKey();
                 String varType = varEntry.getValue();
-                String prefixedVarName = getPrefixedVarName(stateName, originalVarName);
-                allVarTypes.put(prefixedVarName, varType);
+                // 只有非全局变量才需要前缀
+                if (!isGlobalVariable(originalVarName)) {
+                    String prefixedVarName = getPrefixedVarName(stateName, originalVarName);
+                    allVarTypes.put(prefixedVarName, varType);
+                }
             }
         }
         return allVarTypes;
@@ -230,6 +248,11 @@ public class SynlongToLustreContext {
             List<String> states = entry.getValue();
             Set<String> types = varNameToTypes.get(originalVarName);
             
+            // 如果是全局变量，不添加前缀
+            if (isGlobalVariable(originalVarName)) {
+                continue; // 全局变量不在这里处理
+            }
+            
             if (states.size() == 1) {
                 // 只在一个状态中定义，使用前缀名
                 String stateName = states.get(0);
@@ -311,8 +334,8 @@ public class SynlongToLustreContext {
                     
                     // 确定最终的变量名
                     String finalVarName;
-                    if (isVariableSharedAcrossStates(originalLhs)) {
-                        finalVarName = originalLhs; // 共享变量使用原名
+                    if (isGlobalVariable(originalLhs) || isVariableSharedAcrossStates(originalLhs)) {
+                        finalVarName = originalLhs; // 全局变量或共享变量使用原名
                     } else {
                         finalVarName = getPrefixedVarName(stateName, originalLhs); // 单独变量使用前缀名
                     }
@@ -329,8 +352,12 @@ public class SynlongToLustreContext {
         return grouped;
     }
     
-    // 检查变量是否在多个状态间共享（同名且同类型）
+    // 检查变量是否在多个状态间共享（同名且同类型，但不是全局变量）
     private boolean isVariableSharedAcrossStates(String varName) {
+        if (isGlobalVariable(varName)) {
+            return false; // 全局变量不算共享状态变量
+        }
+        
         int stateCount = 0;
         Set<String> types = new HashSet<>();
         
@@ -368,8 +395,8 @@ public class SynlongToLustreContext {
             Map<String, String> stateVars = stateEntry.getValue();
             
             for (String varName : stateVars.keySet()) {
-                // 如果rhs中包含状态变量名，且该变量属于当前状态，则添加前缀
-                if (stateName.equals(currentStateName) && processedRhs.contains(varName)) {
+                // 只有非全局的状态变量才需要添加前缀
+                if (stateName.equals(currentStateName) && !isGlobalVariable(varName) && processedRhs.contains(varName)) {
                     // 简单的字符串替换，实际应该使用更精确的解析
                     processedRhs = processedRhs.replaceAll("\\b" + varName + "\\b", getPrefixedVarName(stateName, varName));
                 }
