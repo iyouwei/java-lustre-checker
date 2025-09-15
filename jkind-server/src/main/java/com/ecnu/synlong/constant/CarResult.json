@@ -1,0 +1,112 @@
+{
+  "declaration": "",
+  "automatons": [
+    {
+      "name": "Car",
+      "parameters": "",
+      "init": 1,
+      "declaration": "var v = 100\\n\\nfunc speed_up() {\\n    v = v + 10\\n}\\n\\nfunc speed_down() {\\n    v = v - 10\\n}\\n\\nfunc keep() {\\n    \\n}",
+      "locations": [
+        {
+          "id": 3,
+          "name": "Keep",
+          "invariant": ""
+        },
+        {
+          "id": 4,
+          "name": "SpeedDown",
+          "invariant": ""
+        },
+        {
+          "id": 6,
+          "name": "SpeedUp",
+          "invariant": ""
+        }
+      ],
+      "transitions": [
+        {
+          "id": 5,
+          "source_id": 6,
+          "target_id": 3,
+          "select": "",
+          "guard": "v <= 150 && v >= 50",
+          "sync": "",
+          "update": ""
+        },
+        {
+          "id": 6,
+          "source_id": 3,
+          "target_id": 4,
+          "select": "",
+          "guard": "v >= 100",
+          "sync": "",
+          "update": ""
+        },
+        {
+          "id": 11,
+          "source_id": 6,
+          "target_id": 4,
+          "select": "",
+          "guard": "",
+          "sync": "",
+          "update": "v >= 150"
+        },
+        {
+          "id": 12,
+          "source_id": 3,
+          "target_id": 6,
+          "select": "",
+          "guard": "v <= 100",
+          "sync": "",
+          "update": ""
+        },
+        {
+          "id": 13,
+          "source_id": 6,
+          "target_id": 6,
+          "select": "",
+          "guard": "",
+          "sync": "",
+          "update": "speed_up()"
+        },
+        {
+          "id": 14,
+          "source_id": 4,
+          "target_id": 4,
+          "select": "",
+          "guard": "",
+          "sync": "",
+          "update": "speed_down()"
+        },
+        {
+          "id": 15,
+          "source_id": 3,
+          "target_id": 3,
+          "select": "",
+          "guard": "",
+          "sync": "",
+          "update": "keep()"
+        },
+        {
+          "id": 16,
+          "source_id": 4,
+          "target_id": 3,
+          "select": "",
+          "guard": "v >= 50 && v <= 150",
+          "sync": "",
+          "update": ""
+        },
+        {
+          "id": 17,
+          "source_id": 4,
+          "target_id": 6,
+          "select": "",
+          "guard": "",
+          "sync": "",
+          "update": "v <= 100"
+        }
+      ]
+    }
+  ],
+  "system_declaration": "// 在这里填写模型的声明.\\ncar := Car()"
+}

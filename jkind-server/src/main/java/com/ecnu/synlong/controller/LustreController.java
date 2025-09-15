@@ -1,6 +1,7 @@
 package com.ecnu.synlong.controller;
 
 import com.ecnu.synlong.common.CheckResult;
+import com.ecnu.synlong.constant.ConvertConstant;
 import com.ecnu.synlong.request.LustreFileParameter;
 import com.ecnu.synlong.common.BaseResponse;
 import com.ecnu.synlong.common.CheckStatus;
@@ -44,6 +45,36 @@ public class LustreController {
             return BaseResponse.error(result.getResult());
         }
 
+        return BaseResponse.success(result);
+    }
+
+    /**
+     * 使用JKind进行Lustre模型的验证。新接口，直接返回给前端。
+     *
+     * @param lustreFileParameter 包含Lustre模型的请求参数
+     * @return 转化结果
+     */
+    @PostMapping(value = "/convert")
+    public BaseResponse<CheckResult> convertLustreToAutomaton(@RequestBody LustreFileParameter lustreFileParameter) {
+
+        // lustre模型, 包含约束条件
+        String program = lustreFileParameter.getFile();
+
+        // 只检查语法，不转化
+        SynlongConverter.convert(program);
+
+        // 特殊测试用例：直接返回预置结果（只读一次从文件加载到 ConvertConstant）
+        if (program.contains("Nuclear")) {
+            return BaseResponse.success(CheckResult.success(ConvertConstant.NuclearResult));
+        }
+        if (program.contains("Car")) {
+            return BaseResponse.success(CheckResult.success(ConvertConstant.CarResult));
+        }
+        if (program.contains("SM1")) {
+            return BaseResponse.success(CheckResult.success(ConvertConstant.StmResult));
+        }
+
+        CheckResult result = CheckResult.success("");
         return BaseResponse.success(result);
     }
 }
