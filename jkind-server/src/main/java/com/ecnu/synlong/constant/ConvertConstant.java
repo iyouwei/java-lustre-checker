@@ -1,10 +1,14 @@
 package com.ecnu.synlong.constant;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 public class ConvertConstant {
     public static final String StmResult;
@@ -22,10 +26,14 @@ public class ConvertConstant {
     }
 
     private static String readResourceFile(String filename) throws Exception {
-        // 通过类加载器获取资源路径
-        Path path = Paths.get(ConvertConstant.class.getClassLoader()
-                .getResource("result/" + filename)
-                .toURI());
-        return String.join("\n", Files.readAllLines(path, StandardCharsets.UTF_8));
+        InputStream is = ConvertConstant.class.getClassLoader()
+                .getResourceAsStream("result/" + filename);
+        if (is == null) {
+            throw new IOException("无法找到资源文件: result/" + filename);
+        }
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        }
     }
 }
