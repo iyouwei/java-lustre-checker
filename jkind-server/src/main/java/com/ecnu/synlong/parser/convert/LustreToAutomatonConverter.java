@@ -25,6 +25,10 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
     private final List<Location> currentLocations;
     private final List<Transition> currentTransitions;
     
+    // 坐标计算相关
+    private final Map<Integer, Double[]> locationPositions = new HashMap<>();
+    private static final int CANVAS_SIZE = 1000;
+    
     public LustreToAutomatonConverter(SynlongToLustreContext context) {
         this.context = context;
         this.automatonModel = new AutomatonModel();
@@ -480,13 +484,75 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
      * 生成位置（状态）
      */
     private void generateLocations() {
-        for (String stateName : context.getAllStates()) {
+        List<String> states = new ArrayList<>(context.getAllStates());
+        calculateLocationPositions(states);
+        
+        for (String stateName : states) {
+            Integer stateId = getOrCreateStateId(stateName);
+            Double[] position = locationPositions.get(stateId);
+            
             Location location = new Location();
-            location.setId(getOrCreateStateId(stateName));
-            location.setName(stateName);
-            location.setInvariant(""); // 暂时为空
+            location.setId(stateId);
+            
+            // 设置位置坐标
+            location.setX(position[0]);
+            location.setY(position[1]);
+            
+            // 设置名称（带坐标）
+            Location.NamedContent nameContent = new Location.NamedContent();
+            nameContent.setContent(stateName);
+            nameContent.setX(position[0]);
+            nameContent.setY(position[1] - 30); // 名称在位置上方
+            location.setName(nameContent);
+            
+            // 设置不变量（带坐标）
+            Location.NamedContent invariantContent = new Location.NamedContent();
+            invariantContent.setContent("");
+            invariantContent.setX(position[0]);
+            invariantContent.setY(position[1] + 30); // 不变量在位置下方
+            location.setInvariant(invariantContent);
             
             currentLocations.add(location);
+        }
+    }
+    
+    /**
+     * 计算位置坐标
+     */
+    private void calculateLocationPositions(List<String> states) {
+        int stateCount = states.size();
+        if (stateCount == 0) return;
+        
+        // 在1000x1000的画布内均匀分布状态
+        double margin = 100;
+        double availableWidth = CANVAS_SIZE - 2 * margin;
+        double availableHeight = CANVAS_SIZE - 2 * margin;
+        
+        if (stateCount == 1) {
+            // 单个状态放在中心
+            Double[] position = {CANVAS_SIZE / 2.0, CANVAS_SIZE / 2.0};
+            locationPositions.put(getOrCreateStateId(states.get(0)), position);
+        } else if (stateCount == 2) {
+            // 两个状态水平分布
+            for (int i = 0; i < stateCount; i++) {
+                double x = margin + (i * availableWidth / (stateCount - 1));
+                double y = CANVAS_SIZE / 2.0;
+                Double[] position = {x, y};
+                locationPositions.put(getOrCreateStateId(states.get(i)), position);
+            }
+        } else {
+            // 多个状态按圆形分布
+            double centerX = CANVAS_SIZE / 2.0;
+            double centerY = CANVAS_SIZE / 2.0;
+            double radius = Math.min(availableWidth, availableHeight) / 2.0 * 0.8;
+            
+            for (int i = 0; i < stateCount; i++) {
+                double angle = 2 * Math.PI * i / stateCount;
+                double x = centerX + radius * Math.cos(angle);
+                double y = centerY + radius * Math.sin(angle);
+                Double[] position = {x, y};
+                locationPositions.put(getOrCreateStateId(states.get(i)), position);
+            }
         }
     }
     
@@ -504,6 +570,7 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
      * 生成转换
      */
     private void generateTransitions() {
+        // 为每个状态生成转换
         for (String stateName : context.getAllStates()) {
             List<String> transitions = context.getStateTransitions(stateName);
             for (String transition : transitions) {
@@ -512,10 +579,10 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
                     currentTransitions.add(trans);
                 }
             }
-            
-            // 生成状态内的赋值转换
-            generateInternalTransitions(stateName);
         }
+        
+        // 单独生成状态内的赋值转换（避免与unless/until转换重复）
+        generateInternalTransitions();
     }
     
     /**
@@ -538,13 +605,14 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
         transition.setSourceId(getOrCreateStateId(sourceStateName));
         transition.setTargetId(getOrCreateStateId(targetStateName));
         
+        // 设置坐标
+        setTransitionCoordinates(transition);
+        
         // 根据转换类型设置guard和update
         if ("unless".equals(type)) {
-            transition.setGuard(condition);
-            transition.setUpdate(""); // unless转换通常没有update
+            setTransitionContent(transition, "guard", condition, "update", "");
         } else if ("until".equals(type)) {
-            transition.setGuard(""); // until转换的guard通常是空的
-            transition.setUpdate(condition); // until转换的条件作为update
+            setTransitionContent(transition, "guard", "", "update", condition);
         }
         
         return transition;
@@ -553,27 +621,37 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
     /**
      * 生成状态内的赋值转换
      */
-    private void generateInternalTransitions(String stateName) {
-        List<String> assignments = context.getStateAssignments(stateName);
-        for (String assignment : assignments) {
-            // 解析赋值语句，提取函数调用
-            if (assignment.contains("=")) {
-                String[] parts = assignment.split("=");
-                if (parts.length == 2) {
-                    String rhs = parts[1].trim();
-                    if (rhs.contains("()")) {
-                        // 提取函数名
-                        String functionCall = extractFunctionCall(rhs);
-                        if (functionCall != null) {
-                            // 函数调用转换为内部转换
-                            Transition transition = new Transition();
-                            transition.setId(nextTransitionId++);
-                            transition.setSourceId(getOrCreateStateId(stateName));
-                            transition.setTargetId(getOrCreateStateId(stateName)); // 自循环
-                            transition.setGuard(""); // 无条件
-                            transition.setUpdate(functionCall);
-                            
-                            currentTransitions.add(transition);
+    private void generateInternalTransitions() {
+        for (String stateName : context.getAllStates()) {
+            List<String> assignments = context.getStateAssignments(stateName);
+            Set<String> processedFunctions = new HashSet<>(); // 避免重复
+            
+            for (String assignment : assignments) {
+                // 解析赋值语句，提取函数调用
+                if (assignment.contains("=")) {
+                    String[] parts = assignment.split("=");
+                    if (parts.length == 2) {
+                        String rhs = parts[1].trim();
+                        if (rhs.contains("()")) {
+                            // 提取函数名
+                            String functionCall = extractFunctionCall(rhs);
+                            if (functionCall != null && !processedFunctions.contains(functionCall)) {
+                                processedFunctions.add(functionCall);
+                                
+                                // 函数调用转换为内部转换
+                                Transition transition = new Transition();
+                                transition.setId(nextTransitionId++);
+                                transition.setSourceId(getOrCreateStateId(stateName));
+                                transition.setTargetId(getOrCreateStateId(stateName)); // 自循环
+                                
+                                // 设置坐标
+                                setTransitionCoordinates(transition);
+                                
+                                // 设置内容
+                                setTransitionContent(transition, "guard", "", "update", functionCall);
+                                
+                                currentTransitions.add(transition);
+                            }
                         }
                     }
                 }
@@ -595,6 +673,95 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
             }
         }
         return null;
+    }
+    
+    /**
+     * 设置转换坐标
+     */
+    private void setTransitionCoordinates(Transition transition) {
+        Integer sourceId = transition.getSourceId();
+        Integer targetId = transition.getTargetId();
+        
+        Double[] sourcePos = locationPositions.get(sourceId);
+        Double[] targetPos = locationPositions.get(targetId);
+        
+        if (sourcePos == null || targetPos == null) return;
+        
+        // 计算转换中点
+        double midX = (sourcePos[0] + targetPos[0]) / 2.0;
+        double midY = (sourcePos[1] + targetPos[1]) / 2.0;
+        
+        // 设置nails（转折点）
+        List<Transition.Nail> nails = new ArrayList<>();
+        
+        if (sourceId.equals(targetId)) {
+            // 自循环：添加两个转折点，向外偏移
+            double offset = 80;
+            Transition.Nail nail1 = new Transition.Nail();
+            nail1.setX(sourcePos[0] + offset);
+            nail1.setY(sourcePos[1] - offset);
+            nails.add(nail1);
+            
+            Transition.Nail nail2 = new Transition.Nail();
+            nail2.setX(sourcePos[0] - offset);
+            nail2.setY(sourcePos[1] - offset);
+            nails.add(nail2);
+        } else {
+            // 非自循环：添加一个中点转折点，稍微偏移
+            double offsetX = 20;
+            double offsetY = 20;
+            Transition.Nail nail = new Transition.Nail();
+            nail.setX(midX + offsetX);
+            nail.setY(midY + offsetY);
+            nails.add(nail);
+        }
+        
+        transition.setNails(nails);
+    }
+    
+    /**
+     * 设置转换内容（guard和update）
+     */
+    private void setTransitionContent(Transition transition, String guardField, String guardContent, 
+                                    String updateField, String updateContent) {
+        // 计算坐标位置
+        Integer sourceId = transition.getSourceId();
+        Integer targetId = transition.getTargetId();
+        
+        Double[] sourcePos = locationPositions.get(sourceId);
+        Double[] targetPos = locationPositions.get(targetId);
+        
+        if (sourcePos == null || targetPos == null) return;
+        
+        double midX = (sourcePos[0] + targetPos[0]) / 2.0;
+        double midY = (sourcePos[1] + targetPos[1]) / 2.0;
+        
+        // 设置guard
+        Transition.ContentWithPosition guard = new Transition.ContentWithPosition();
+        guard.setContent(guardContent);
+        guard.setX(midX);
+        guard.setY(midY - 15);
+        transition.setGuard(guard);
+        
+        // 设置update
+        Transition.ContentWithPosition update = new Transition.ContentWithPosition();
+        update.setContent(updateContent);
+        update.setX(midX);
+        update.setY(midY + 15);
+        transition.setUpdate(update);
+        
+        // 设置select和sync（默认为空）
+        Transition.ContentWithPosition select = new Transition.ContentWithPosition();
+        select.setContent("");
+        select.setX(midX);
+        select.setY(midY - 30);
+        transition.setSelect(select);
+        
+        Transition.ContentWithPosition sync = new Transition.ContentWithPosition();
+        sync.setContent("");
+        sync.setX(midX);
+        sync.setY(midY + 30);
+        transition.setSync(sync);
     }
     
     /**

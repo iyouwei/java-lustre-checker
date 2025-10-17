@@ -16,14 +16,38 @@ public class Location {
     private Integer id;
     
     /**
-     * 位置名称
+     * 位置名称（包含坐标的对象）
      */
     @JsonProperty("name")
-    private String name;
+    private NamedContent name;
     
     /**
-     * 不变量
+     * 不变量（包含坐标的对象）
      */
     @JsonProperty("invariant")
-    private String invariant;
+    private NamedContent invariant;
+    
+    /**
+     * 位置坐标
+     */
+    @JsonProperty("x")
+    private Double x;
+    
+    @JsonProperty("y")
+    private Double y;
+    
+    /**
+     * 带坐标的内容对象
+     */
+    @Data
+    public static class NamedContent {
+        @JsonProperty("content")
+        private String content;
+        
+        @JsonProperty("x")
+        private Double x;
+        
+        @JsonProperty("y")
+        private Double y;
+    }
 }

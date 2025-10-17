@@ -65,10 +65,10 @@ public class AutomatonConverterTest {
             assertFalse(result.contains("\"name\":\"keep\""));
             assertFalse(result.contains("\"name\":\"N\""));
             
-            // 验证包含正确的状态
-            assertTrue(result.contains("\"name\":\"Keep\""));
-            assertTrue(result.contains("\"name\":\"SpeedDown\""));
-            assertTrue(result.contains("\"name\":\"SpeedUp\""));
+            // 验证包含正确的状态（现在状态名称是对象结构）
+            assertTrue(result.contains("\"content\":\"Keep\""));
+            assertTrue(result.contains("\"content\":\"SpeedDown\""));
+            assertTrue(result.contains("\"content\":\"SpeedUp\""));
             
             // 验证系统声明正确
             assertTrue(result.contains("\"system_declaration\":\"// 在这里填写模型的声明.\\\\ncar := Car()\""));
