@@ -307,9 +307,16 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
         if (ctx instanceof SynlongParser.UserOpDeclContext) {
             SynlongParser.UserOpDeclContext userOpCtx = (SynlongParser.UserOpDeclContext) ctx;
             
+            // 检查是否包含状态机
+            if (!hasStateMachine(userOpCtx)) {
+                return; // 不包含状态机，跳过
+            }
+            
             // 创建新的自动机
             currentAutomaton = new Automaton();
-            currentAutomaton.setName(userOpCtx.ID().getText());
+            // 使用状态机名称，而不是节点名称
+            String automatonName = extractAutomatonName(userOpCtx);
+            currentAutomaton.setName(automatonName != null ? automatonName : userOpCtx.ID().getText());
             currentAutomaton.setParameters(generateParameters(userOpCtx.params()));
             currentAutomaton.setDeclaration(generateDeclaration());
             
@@ -331,6 +338,60 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
             currentAutomaton.setTransitions(new ArrayList<>(currentTransitions));
             automatonModel.getAutomatons().add(currentAutomaton);
         }
+    }
+    
+    /**
+     * 检查节点是否包含状态机
+     */
+    private boolean hasStateMachine(SynlongParser.UserOpDeclContext userOpCtx) {
+        if (userOpCtx.op_body() instanceof SynlongParser.FullOpBodyContext) {
+            SynlongParser.FullOpBodyContext fullBody = (SynlongParser.FullOpBodyContext) userOpCtx.op_body();
+            if (fullBody.let_block() != null) {
+                return containsStateMachine(fullBody.let_block());
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 检查let块是否包含状态机
+     */
+    private boolean containsStateMachine(SynlongParser.Let_blockContext letBlock) {
+        for (ParseTree child : letBlock.children) {
+            if (child instanceof SynlongParser.StateMachineReturnContext) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 提取状态机名称
+     */
+    private String extractAutomatonName(SynlongParser.UserOpDeclContext userOpCtx) {
+        if (userOpCtx.op_body() instanceof SynlongParser.FullOpBodyContext) {
+            SynlongParser.FullOpBodyContext fullBody = (SynlongParser.FullOpBodyContext) userOpCtx.op_body();
+            if (fullBody.let_block() != null) {
+                return extractAutomatonNameFromLetBlock(fullBody.let_block());
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * 从let块中提取状态机名称
+     */
+    private String extractAutomatonNameFromLetBlock(SynlongParser.Let_blockContext letBlock) {
+        for (ParseTree child : letBlock.children) {
+            if (child instanceof SynlongParser.StateMachineReturnContext) {
+                SynlongParser.StateMachineReturnContext smReturn = (SynlongParser.StateMachineReturnContext) child;
+                SynlongParser.State_machineContext stateMachine = smReturn.state_machine();
+                if (stateMachine.ID() != null) {
+                    return stateMachine.ID().getText();
+                }
+            }
+        }
+        return null;
     }
     
     /**
@@ -476,8 +537,15 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
         transition.setId(nextTransitionId++);
         transition.setSourceId(getOrCreateStateId(sourceStateName));
         transition.setTargetId(getOrCreateStateId(targetStateName));
-        transition.setGuard(condition);
-        transition.setUpdate(""); // 暂时为空
+        
+        // 根据转换类型设置guard和update
+        if ("unless".equals(type)) {
+            transition.setGuard(condition);
+            transition.setUpdate(""); // unless转换通常没有update
+        } else if ("until".equals(type)) {
+            transition.setGuard(""); // until转换的guard通常是空的
+            transition.setUpdate(condition); // until转换的条件作为update
+        }
         
         return transition;
     }
@@ -488,18 +556,45 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
     private void generateInternalTransitions(String stateName) {
         List<String> assignments = context.getStateAssignments(stateName);
         for (String assignment : assignments) {
-            if (assignment.contains("()")) {
-                // 函数调用转换为内部转换
-                Transition transition = new Transition();
-                transition.setId(nextTransitionId++);
-                transition.setSourceId(getOrCreateStateId(stateName));
-                transition.setTargetId(getOrCreateStateId(stateName)); // 自循环
-                transition.setGuard(""); // 无条件
-                transition.setUpdate(assignment.trim());
-                
-                currentTransitions.add(transition);
+            // 解析赋值语句，提取函数调用
+            if (assignment.contains("=")) {
+                String[] parts = assignment.split("=");
+                if (parts.length == 2) {
+                    String rhs = parts[1].trim();
+                    if (rhs.contains("()")) {
+                        // 提取函数名
+                        String functionCall = extractFunctionCall(rhs);
+                        if (functionCall != null) {
+                            // 函数调用转换为内部转换
+                            Transition transition = new Transition();
+                            transition.setId(nextTransitionId++);
+                            transition.setSourceId(getOrCreateStateId(stateName));
+                            transition.setTargetId(getOrCreateStateId(stateName)); // 自循环
+                            transition.setGuard(""); // 无条件
+                            transition.setUpdate(functionCall);
+                            
+                            currentTransitions.add(transition);
+                        }
+                    }
+                }
             }
         }
+    }
+    
+    /**
+     * 提取函数调用
+     */
+    private String extractFunctionCall(String expression) {
+        // 简单的函数调用提取，寻找 "function_name()" 模式
+        if (expression.contains("(") && expression.contains(")")) {
+            int start = expression.indexOf("(");
+            int end = expression.indexOf(")");
+            if (start > 0 && end > start) {
+                String functionName = expression.substring(0, start).trim();
+                return functionName + "()";
+            }
+        }
+        return null;
     }
     
     /**
@@ -521,8 +616,9 @@ public class LustreToAutomatonConverter extends SynlongBaseVisitor<String> {
     private void generateSystemDeclaration() {
         if (!automatonModel.getAutomatons().isEmpty()) {
             Automaton automaton = automatonModel.getAutomatons().get(0);
+            String automatonName = automaton.getName().toLowerCase();
             automatonModel.setSystemDeclaration("// 在这里填写模型的声明.\\n" + 
-                automaton.getName().toLowerCase() + " := " + automaton.getName() + "()");
+                automatonName + " := " + automaton.getName() + "()");
         }
     }
     

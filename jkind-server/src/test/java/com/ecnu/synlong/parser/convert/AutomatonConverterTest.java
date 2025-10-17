@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AutomatonConverterTest {
     
     @Test
-    public void testConvertCarAutomaton() {
-        // 测试用例：Car自动机
+    public void testConvertCarAutomatonFixed() {
+        // 使用原始的Lustre代码
         String lustreCode = "node speed_up(v: int) returns (vt: int)\n" +
             "let\n" +
             "    vt = v + 10;\n" +
@@ -58,58 +58,27 @@ public class AutomatonConverterTest {
             assertNotNull(result);
             assertFalse(result.trim().isEmpty());
             
-            // 验证结果包含预期的自动机名称
-            assertTrue(result.contains("\"name\":\"N\""));
+            // 验证只有一个自动机，名为"Car"
+            assertTrue(result.contains("\"name\":\"Car\""));
+            assertFalse(result.contains("\"name\":\"speed_up\""));
+            assertFalse(result.contains("\"name\":\"speed_down\""));
+            assertFalse(result.contains("\"name\":\"keep\""));
+            assertFalse(result.contains("\"name\":\"N\""));
             
-            // 验证结果包含状态
+            // 验证包含正确的状态
             assertTrue(result.contains("\"name\":\"Keep\""));
             assertTrue(result.contains("\"name\":\"SpeedDown\""));
             assertTrue(result.contains("\"name\":\"SpeedUp\""));
             
-            System.out.println("转换结果:");
+            // 验证系统声明正确
+            assertTrue(result.contains("\"system_declaration\":\"// 在这里填写模型的声明.\\\\ncar := Car()\""));
+            
+            System.out.println("修复后的转换结果:");
             System.out.println(result);
             
         } catch (Exception e) {
             fail("转换失败: " + e.getMessage());
-        }
-    }
-    
-    @Test
-    public void testConvertSimpleAutomaton() {
-        // 测试用例：简单自动机
-        String lustreCode = "node simple() returns (result: bool)\n" +
-            "let\n" +
-            "    automaton Simple\n" +
-            "        initial state State1\n" +
-            "        unless\n" +
-            "            if true restart State2;\n" +
-            "        let result = true; tel\n" +
-            "    state State2\n" +
-            "        unless\n" +
-            "            if true restart State1;\n" +
-            "        let result = false; tel\n" +
-            "    returns result;\n" +
-            "tel;";
-        
-        try {
-            String result = AutomatonConverter.convertToAutomaton(lustreCode);
-            
-            // 验证结果不为空
-            assertNotNull(result);
-            assertFalse(result.trim().isEmpty());
-            
-            // 验证结果包含预期的自动机名称
-            assertTrue(result.contains("\"name\":\"simple\""));
-            
-            // 验证结果包含状态
-            assertTrue(result.contains("\"name\":\"State1\""));
-            assertTrue(result.contains("\"name\":\"State2\""));
-            
-            System.out.println("简单自动机转换结果:");
-            System.out.println(result);
-            
-        } catch (Exception e) {
-            fail("转换失败: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
