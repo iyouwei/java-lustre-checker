@@ -63,30 +63,10 @@ public class LustreController {
         // lustre模型, 包含约束条件
         String program = lustreFileParameter.getFile();
 
-        try {
-            // 使用动态转换器将Lustre代码转换为自动机模型
-            String automatonJson = AutomatonConverter.convertToAutomaton(program);
-            
-            CheckResult result = CheckResult.success(automatonJson);
-            return BaseResponse.success(result);
-            
-        } catch (Exception e) {
-            // 如果动态转换失败，回退到硬编码方式（保持向后兼容）
-            log.warn("动态转换失败，回退到硬编码方式: {}", e.getMessage());
-            
-            // 特殊测试用例：直接返回预置结果（只读一次从文件加载到 ConvertConstant）
-            if (program.contains("Nuclear")) {
-                return BaseResponse.success(CheckResult.success(ConvertConstant.NuclearResult));
-            }
-            if (program.contains("Car")) {
-                return BaseResponse.success(CheckResult.success(ConvertConstant.CarResult));
-            }
-            if (program.contains("SM1")) {
-                return BaseResponse.success(CheckResult.success(ConvertConstant.StmResult));
-            }
+        // 使用动态转换器将Lustre代码转换为自动机模型
+        String automatonJson = AutomatonConverter.convertToAutomaton(program);
 
-            CheckResult result = CheckResult.success("");
-            return BaseResponse.success(result);
-        }
+        CheckResult result = CheckResult.success(automatonJson);
+        return BaseResponse.success(result);
     }
 }
